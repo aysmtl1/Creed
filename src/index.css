@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+html, body {
+  background-color: #e6d2d2;
+  color: #b58787;
+  overflow-x: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Custom Cursor aktifken varsayılan imleci gizle (isteğe bağlı) */
+body {
+  cursor: default;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
