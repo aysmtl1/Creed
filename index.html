@@ -2,9 +2,16 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c1518">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CHAPTER">
 <title>CHAPTER / — Read what you feel</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%23e8a0b4%22/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
@@ -216,6 +223,21 @@ h2 em,.hero-title em,.end-title em{color:var(--accentText);font-style:italic}
 /* mood */
 #mood .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:6vw;align-items:start}
 .step{margin-top:6vh}
+@media (display-mode: standalone){
+  .nav{padding-top:calc(env(safe-area-inset-top) + 12px)}
+  body{padding-bottom:env(safe-area-inset-bottom)}
+}
+.fg-install[hidden]{display:none!important}
+@media (max-width:640px){                       /* phones: the language row scrolls sideways; genres wrap so all 12 stay visible */
+  #langF{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-inline:calc(var(--pad)*-1);padding:2px var(--pad) 6px;scroll-snap-type:x proximity;width:calc(100% + var(--pad)*2);box-sizing:border-box}
+  #langF::-webkit-scrollbar{display:none}
+  #langF .pill{flex:none;scroll-snap-align:start}
+  #mood .grid,#mood .grid>div,#mood .step{min-width:0;max-width:100%}
+  #genres .chip{padding:9px 14px;font-size:13.5px}
+  .step{margin-top:4.5vh}
+}
+.genres .chip{padding:10px 16px;font-size:14px}
+.genres .chip i{border-radius:2px;transform:rotate(45deg);width:7px;height:7px}
 .step-h{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:16px}
 .step-h b{color:var(--ink);font-weight:400}
 .chips{display:flex;flex-wrap:wrap;gap:10px;position:relative}
@@ -363,45 +385,55 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-b
 .log-row .kb{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto}
 
 /* shelf — 3D books */
-.shelf{position:relative;margin-top:6vh;min-height:360px;display:flex;align-items:flex-end;justify-content:center;flex-wrap:wrap;gap:4px;padding:40px 10px 0;
-  perspective:1500px;perspective-origin:50% 20%;z-index:2}
+.shelf{position:relative;display:flex;align-items:flex-end;gap:var(--book-gap);padding-top:32px;z-index:2}
 .shelf-wrap{position:relative}
-.shelf-deco{position:absolute;bottom:22px;z-index:1;pointer-events:none;opacity:.92;--vase:#eef0f6;--vaseLine:#5f6fa3;--pot:#c97b5a;--potRim:#b06a4b}
+/* a bookcase that grows: one plank per row, labelled rows per status, extra rows folded away until asked for */
+.bookcase{--ledge:clamp(12px,2.4vw,42px);--book-gap:2px;position:relative;display:flex;flex-direction:column;gap:clamp(18px,3vh,28px);padding:22px var(--ledge) 0}
+.tier{position:relative}
+.tier-label{position:relative;z-index:3;display:flex;align-items:baseline;gap:10px;margin:0 0 -8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tier-label b{color:var(--ink);font-weight:500}
+.tier.center .shelf{justify-content:center}
+.case-more{align-self:center;display:inline-flex;gap:10px;align-items:center;padding:12px 20px;border:1px solid var(--line);border-radius:99px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:var(--g-bg,transparent)}
+.case-more:hover,.case-more:focus-visible{border-color:var(--accent);color:var(--accentText)}
+.shelf-deco{position:absolute;bottom:0;z-index:1;pointer-events:none;opacity:.92;--vase:#eef0f6;--vaseLine:#5f6fa3;--pot:#c97b5a;--potRim:#b06a4b}
 :root[data-theme="dark"] .shelf-deco{opacity:.8;--vase:#d9dbe6}
-.shelf-deco.l{left:1%;width:clamp(70px,9vw,130px)}
-.shelf-deco.r{right:1%;width:clamp(90px,12vw,170px)}
+.shelf-deco.l{left:0;width:min(19%,90px)}
+.shelf-deco.r{right:0;width:min(23%,125px)}
 .shelf-deco svg{display:block;width:100%;height:auto}
 .shelf-deco .bloom{fill:#f2a7b8}
-.slot-ghost{flex:none;align-self:flex-end;position:relative;width:var(--t);height:var(--h);margin-bottom:-16px;border:1.5px dashed color-mix(in srgb,var(--ink) 28%,transparent);border-radius:3px;background:color-mix(in srgb,var(--ink) 4%,transparent);color:color-mix(in srgb,var(--ink) 45%,transparent);font-size:20px;display:grid;place-items:center;transition:transform .35s cubic-bezier(.2,.9,.2,1),border-color .2s,color .2s}
+.slot-ghost{flex:none;align-self:flex-end;position:relative;width:var(--t);height:var(--h);border:1.5px dashed color-mix(in srgb,var(--ink) 28%,transparent);border-radius:3px;background:color-mix(in srgb,var(--ink) 4%,transparent);color:color-mix(in srgb,var(--ink) 45%,transparent);font-size:20px;display:grid;place-items:center;transition:transform .35s cubic-bezier(.2,.9,.2,1),border-color .2s,color .2s}
 .slot-ghost:hover,.slot-ghost:focus-visible{transform:translateY(-10px);border-color:var(--accent);color:var(--accentText)}
 .slot-ghost .gl{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
-@media (max-width:700px){ .shelf-deco.l{width:54px;left:0} .shelf-deco.r{width:76px;right:0} .slot-ghost{margin-bottom:-10px} }
-.shelf-plank{position:relative;height:34px;margin:0 -2%;pointer-events:none;z-index:1;
-  filter:drop-shadow(0 18px 18px rgba(0,0,0,.35))}
-.shelf-plank::before{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,color-mix(in srgb,var(--wood) 70%,#000) 0,color-mix(in srgb,var(--wood) 88%,#fff) 64%,color-mix(in srgb,var(--wood) 92%,#fff) 66%,var(--wood) 67%,color-mix(in srgb,var(--wood) 80%,#000) 100%);
-  clip-path:polygon(1.6% 0,98.4% 0,100% 64%,100% 100%,0 100%,0 64%)}
-.shelf-plank i{position:absolute;left:12%;right:12%;top:0;height:16px;background:radial-gradient(ellipse 50% 100% at 50% 0,rgba(0,0,0,.30),transparent 70%)}
-.slot{position:relative;flex:none;width:var(--t);height:var(--h);transform-style:preserve-3d;z-index:1;transition:z-index 0s .6s}
+.shelf-plank{--timber:#8c6148;position:relative;height:12px;margin:0 calc(-1 * var(--ledge));pointer-events:none;z-index:1;border-radius:1px 1px 3px 3px;
+  background:repeating-linear-gradient(1deg,transparent 0 3px,#42281238 4px,transparent 5px 9px),linear-gradient(#bd9371,var(--timber) 34%,#604332 95%);
+  box-shadow:inset 0 1px #ffe6c97a,inset 0 -2px #301b164d,0 8px 10px -5px #24171280}
+.shelf-plank::before{content:"";position:absolute;inset:-7px 0 100%;background:linear-gradient(#795944,#b88b68);clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 100%,0 100%)}
+:root[data-theme="dark"] .shelf-plank{filter:brightness(.81)}
+.slot{position:relative;flex:none;width:var(--t);height:var(--h);padding:0;perspective:800px;z-index:1;transition:z-index 0s .45s}
 .slot:hover,.slot:focus-visible{z-index:20;transition-delay:0s}
-.bk{position:absolute;bottom:0;left:calc(50% - var(--w) / 2);width:var(--w);height:var(--h);transform-style:preserve-3d;
-  transform:rotateY(90deg);transition:transform .6s cubic-bezier(.45,0,.2,1)}
-.slot:hover .bk,.slot:focus-visible .bk{transform:translateZ(170px) translateY(-34px) rotateY(14deg) rotateX(4deg);transition:transform .8s cubic-bezier(.2,.85,.25,1)}
-.reduced .bk{transition:none}
+.slot .bk{position:absolute;bottom:0;left:calc(50% - var(--w) / 2);width:var(--w);height:var(--h);transform-style:preserve-3d;
+  transform:translateZ(calc(-.5 * var(--w))) rotateY(90deg);transition:transform .45s cubic-bezier(.22,.76,.28,1)}
+.slot:focus-visible .bk,.slot.pulled2 .bk{transform:translateX(var(--shift,0px)) translateY(-12px) rotateY(10deg)}
+@media (hover:hover) and (pointer:fine){.slot:hover .bk{transform:translateX(var(--shift,0px)) translateY(-12px) rotateY(10deg)}}
+.reduced .slot .bk{transition:none}
 .bf{position:absolute;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .bf.front{inset:0;transform:translateZ(calc(var(--t) / 2))}
 .bf.front .cover{width:100%;height:100%;aspect-ratio:auto;box-shadow:inset 5px 0 8px rgba(0,0,0,.22)}
 .bf.back{inset:0;transform:rotateY(180deg) translateZ(calc(var(--t) / 2));background:color-mix(in srgb,var(--cbg) 85%,#000)}
-.bf.spine{top:0;height:100%;width:var(--t);left:calc(50% - var(--t) / 2);transform:rotateY(-90deg) translateZ(calc(var(--w) / 2));background:var(--cbg);color:var(--cfg);
-  display:flex;align-items:center;justify-content:center;box-shadow:inset -5px 0 8px rgba(0,0,0,.25),inset 4px 0 4px rgba(255,255,255,.06);padding:10px 0}
-.bf.spine span{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--serif);font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:100%}
-.bf.spine::before,.bf.spine::after{content:"";position:absolute;left:18%;right:18%;height:2px;background:var(--cfg);opacity:.6}
-.bf.spine::before{top:14px}.bf.spine::after{bottom:14px}
+.bf.spine{top:0;height:100%;width:var(--t);left:calc(50% - var(--t) / 2);transform:rotateY(-90deg) translateZ(calc(var(--w) / 2));color:var(--cfg);
+  background:linear-gradient(90deg,#0005,transparent 13%,#fff2 28%,transparent 55%,#0003 90%,#0006),var(--cbg);
+  display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px #fff4,inset 0 -2px #0003,1px 0 2px #1a100d55;border-radius:4px 3px 1px 1px;padding:24px 0}
+.bf.spine span{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--serif);font-size:clamp(12px,1.05vw,17px);line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:100%}
+.bf.spine::before,.bf.spine::after{content:"";position:absolute;left:12%;right:12%;height:1px;background:currentColor;opacity:.52}
+.bf.spine::before{top:12px}.bf.spine::after{bottom:12px}
+.slot.binding-1 .spine::before,.slot.binding-1 .spine::after{box-shadow:0 3px currentColor}
+.slot.binding-2 .spine::before,.slot.binding-2 .spine::after{left:40%;right:40%;height:3px;border-radius:50%}
 .bf.pages{top:4px;height:calc(100% - 8px);width:var(--t);left:calc(50% - var(--t) / 2);transform:rotateY(90deg) translateZ(calc(var(--w) / 2 - 3px));background:repeating-linear-gradient(90deg,#ece4d4 0 2px,#d3c9b7 2px 3px)}
 .bf.top{left:0;width:calc(100% - 3px);height:var(--t);top:calc(50% - var(--t) / 2);transform:rotateX(90deg) translateZ(calc(var(--h) / 2));background:repeating-linear-gradient(0deg,#ece4d4 0 2px,#d3c9b7 2px 3px)}
-.slot-tip{position:absolute;bottom:calc(100% + 60px);left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--muted);opacity:0;transition:opacity .3s .3s;pointer-events:none}
-.slot:hover .slot-tip{opacity:1}
-.shelf-empty{position:absolute;left:0;right:0;bottom:-6px;transform:translateY(100%);padding-top:44px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:13px}
+.slot-tip{position:absolute;bottom:calc(100% + 18px);left:calc(50% + var(--shift,0px));transform:translateX(-50%);white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--bg);padding:3px 6px;border-radius:3px;opacity:0;transition:opacity .2s .2s;pointer-events:none}
+.slot:focus-visible .slot-tip{opacity:1}
+@media (hover:hover) and (pointer:fine){.slot:hover .slot-tip{opacity:1}}
+.shelf-empty{padding:16px 0 0;text-align:center;color:var(--muted);font-family:var(--mono);font-size:13px}
 .shelf-empty button{color:var(--accentText);text-decoration:underline;text-underline-offset:4px;font-family:var(--mono);font-size:13px}
 
 /* epilogue */
@@ -547,7 +579,8 @@ mark.hl.flash{animation:hlFlash 1.4s ease}
 .rn-empty{color:var(--muted);font-size:14px;padding:20px 8px;text-align:center}
 #rNotesBtn{position:relative}
 html.locked,html.locked body{overflow:hidden!important;overscroll-behavior:none}
-#reader{overscroll-behavior:contain;touch-action:none}
+#reader{overscroll-behavior:contain}
+#rBook{touch-action:pinch-zoom}
 #reader .r-top,#reader .r-bottom{touch-action:manipulation}
 
 /* page-turn transition (story → mood) */
@@ -759,7 +792,7 @@ html.locked,html.locked body{overflow:hidden!important;overscroll-behavior:none}
 /* shelf tabs */
 .shelf-bar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:5vh;flex-wrap:wrap}
 .shelf-tabs{display:flex;gap:6px;flex-wrap:wrap}
-.shelf-tabs .pill[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.shelf-tabs .pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 
 /* google form */
 .g-note{font-size:13px;color:var(--muted);margin:14px 0 6px}
@@ -886,7 +919,6 @@ html.locked,html.locked body{overflow:hidden!important;overscroll-behavior:none}
   .sp{padding:8% 7%}
   .sp p{font-size:12px}
   [data-p]::after{white-space:normal;max-width:80vw}
-  .slot:hover .bk{transform:translateZ(90px) translateY(-20px) rotateY(10deg)}
   #rHint,.r-title small,#rClose kbd{display:none}
   .r-title{font-size:18px}
   .r-top{padding:14px var(--pad)}
@@ -902,8 +934,6 @@ html.locked,html.locked body{overflow:hidden!important;overscroll-behavior:none}
 @media (hover:none),(pointer:coarse){
   .on-mouse{display:none!important} .on-touch{display:inline}
   .card:hover .flip{transform:none}              /* no stuck flip after a tap */
-  .slot:hover .bk{transform:rotateY(90deg)}
-  .slot.pulled2 .bk{transform:translateZ(90px) translateY(-20px) rotateY(10deg);transition:transform .7s cubic-bezier(.2,.85,.25,1)}
   .slot.pulled2{z-index:20;transition-delay:0s}
   .slot.pulled2 .slot-tip{opacity:1}
   .magnetic{transform:none!important}
@@ -944,7 +974,6 @@ html.locked,html.locked body{overflow:hidden!important;overscroll-behavior:none}
   .panel{min-height:0;gap:22px;padding:22px}
   .streak{font-size:110px}
   .log-row .btn{padding:12px 18px}
-  .shelf{min-height:300px;gap:3px;padding:30px 4px 0;perspective:900px}
   .shelf-bar{flex-direction:column;align-items:flex-start}
   .shelf-tabs{overflow-x:auto;flex-wrap:nowrap;max-width:100%;padding-bottom:4px}
   .shelf-tabs .pill{flex:none;height:38px}
@@ -1151,9 +1180,8 @@ body.dm-open .ch-back{display:inline-flex}
 
 
 @media (max-width:900px){
-  .shelf{min-height:220px;padding-top:20px}
-  .bf.spine span{font-size:13px}
-  .bf.spine{padding:8px 0}
+  .shelf{padding-top:24px}
+  .bf.spine{padding:18px 0}
   .bf.spine::before{top:8px}.bf.spine::after{bottom:8px}
   #langBtn .g-ico2{display:none}
 }
@@ -1172,10 +1200,9 @@ body.dm-open .ch-back{display:inline-flex}
 
 
 /* shelf: only spines show until a book is pulled out (no cover faces bleeding over neighbours) */
-.bf.front,.bf.back,.bf.pages{visibility:hidden;transition:visibility 0s .5s}
-.slot:hover .bf.front,.slot:hover .bf.back,.slot:hover .bf.pages,
-.slot:focus-visible .bf.front,.slot:focus-visible .bf.back,.slot:focus-visible .bf.pages{visibility:visible;transition-delay:0s}
-@media (hover:none),(pointer:coarse){ .slot.pulled2 .bf.front,.slot.pulled2 .bf.back,.slot.pulled2 .bf.pages{visibility:visible;transition-delay:0s} }
+.slot .bf:not(.spine){visibility:hidden;transition:visibility 0s .45s}
+.slot:focus-visible .bf,.slot.pulled2 .bf{visibility:visible;transition-delay:0s}
+@media (hover:hover) and (pointer:fine){.slot:hover .bf{visibility:visible;transition-delay:0s}}
 /* import */
 #imp{z-index:94;display:flex;align-items:center;justify-content:center;padding:20px}
 #imp .a-bg{position:absolute;inset:0;background:color-mix(in srgb,var(--bg) 62%,transparent)}
@@ -1184,6 +1211,8 @@ body.dm-open .ch-back{display:inline-flex}
 .imp-card h3 em{color:var(--accentText)}
 .drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-top:22px;padding:38px 20px;border:1.5px dashed color-mix(in srgb,var(--accent) 60%,transparent);border-radius:20px;cursor:pointer;text-align:center;transition:background .25s,border-color .25s}
 .drop:hover,.drop.over{background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:var(--accent)}
+.drop:focus-within{outline:2px solid var(--accentText);outline-offset:3px}
+#impFile{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}
 .drop b{font-family:var(--serif);font-weight:400;font-size:28px}
 .drop span{font-family:var(--mono);font-size:11px;color:var(--muted)}
 .drop .drop-ico{font-size:28px;color:var(--accentText);font-family:var(--sans)}
@@ -1341,19 +1370,23 @@ body.dm-open .ch-back{display:inline-flex}
     <div class="grid">
       <div>
         <h2 class="reveal">How are you<br><em>feeling</em> today?</h2>
-        <p class="lede reveal">No genres, no endless lists. Pick a mood and the time you have — matches update as you choose.</p>
+        <p class="lede reveal">No endless lists. Pick a mood, a genre if you like, the time you have and a language — matches update as you choose.</p>
         <div class="step reveal">
           <div class="step-h"><span><b>A</b> — Mood</span><span>pick up to 2</span></div>
           <div class="chips" id="chips" role="group" aria-label="Mood"></div>
           <div class="hint" id="hint" aria-live="polite"></div>
         </div>
         <div class="step reveal">
-          <div class="step-h"><span><b>B</b> — Time you have</span><span>book length</span></div>
+          <div class="step-h"><span><b>B</b> — Genre</span><span>optional · up to 2</span></div>
+          <div class="chips genres" id="genres" role="group" aria-label="Genre"></div>
+        </div>
+        <div class="step reveal">
+          <div class="step-h"><span><b>C</b> — Time you have</span><span>book length</span></div>
           <div class="seg" id="seg" role="radiogroup" aria-label="Time you have"><div class="seg-ind" id="segInd"></div></div>
           <button class="toggle" id="readOnly" role="switch" aria-checked="false"><span class="sw"></span>Only books I can read here</button>
         </div>
         <div class="step reveal">
-          <div class="step-h"><span><b>C</b> — Book language</span><span>edition</span></div>
+          <div class="step-h"><span><b>D</b> — Book language</span><span>edition</span></div>
           <div class="lang-f" id="langF" role="radiogroup" aria-label="Book language"></div>
         </div>
         <div class="result reveal">
@@ -1446,15 +1479,16 @@ body.dm-open .ch-back{display:inline-flex}
     <h2 class="reveal" id="shelfH">Your <em>shelf.</em></h2>
     <p class="lede reveal">Real spines, real depth. <span class="on-mouse">Hover a book and it slides out toward you; click to open it.</span><span class="on-touch">Tap a book to pull it out and open it.</span></p>
     <div class="shelf-bar reveal">
-      <div class="shelf-tabs" id="shelfTabs" role="tablist">
-        <button class="pill" role="tab" data-f="all" aria-selected="true">All</button>
-        <button class="pill" role="tab" data-f="reading" aria-selected="false">Reading</button>
-        <button class="pill" role="tab" data-f="want" aria-selected="false">Want to read</button>
-        <button class="pill" role="tab" data-f="done" aria-selected="false">Finished</button>
+      <div class="shelf-tabs" id="shelfTabs" role="group" aria-labelledby="shelfH">
+        <button class="pill" data-f="all" aria-pressed="true">All</button>
+        <button class="pill" data-f="reading" aria-pressed="false">Reading</button>
+        <button class="pill" data-f="want" aria-pressed="false">Want to read</button>
+        <button class="pill" data-f="done" aria-pressed="false">Finished</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-import>+ Add your own book</button><button class="btn ghost" data-lib="reading">Open library list →</button></div>
     </div>
     <div class="shelf-wrap">
+    <template id="shelfDecor">
     <div class="shelf-deco l" aria-hidden="true"><svg viewBox="0 0 160 220"><g class="branch" stroke="#6b4f39" stroke-width="2.4" fill="none" stroke-linecap="round"><path d="M78 120 C74 90 60 66 34 40"/><path d="M80 120 C86 86 104 60 128 30"/><path d="M78 118 C80 92 78 70 84 44"/><path d="M58 70 C48 66 40 60 30 62"/><path d="M106 64 C116 62 126 66 136 72"/></g>
       <g class="bloom"><circle cx="34" cy="40" r="7"/><circle cx="44" cy="48" r="5"/><circle cx="30" cy="62" r="5"/><circle cx="128" cy="30" r="7"/><circle cx="118" cy="40" r="5"/><circle cx="136" cy="72" r="5"/><circle cx="84" cy="44" r="6"/><circle cx="90" cy="52" r="4"/><circle cx="60" cy="70" r="4"/><circle cx="106" cy="64" r="4"/><circle cx="70" cy="58" r="3.5"/><circle cx="98" cy="46" r="3.5"/></g>
       <path d="M58 214 C46 200 44 170 54 150 C60 138 62 128 66 120 H94 C98 128 100 138 106 150 C116 170 114 200 102 214 Z" fill="var(--vase)"/><path d="M60 160 Q80 152 100 160 M57 176 Q80 168 103 176 M58 192 Q80 184 102 192" stroke="var(--vaseLine)" stroke-width="2" fill="none" opacity=".75"/>
@@ -1462,8 +1496,8 @@ body.dm-open .ch-back{display:inline-flex}
     <div class="shelf-deco r" aria-hidden="true"><svg viewBox="0 0 200 160"><rect x="8" y="128" width="96" height="14" rx="2" fill="#7c6a8f"/><rect x="14" y="116" width="84" height="12" rx="2" fill="#c9737a"/><rect x="18" y="106" width="76" height="10" rx="2" fill="#e8d5c4"/>
       <path d="M134 158 L126 118 H178 L170 158 Z" fill="var(--pot)"/><rect x="122" y="112" width="60" height="9" rx="3" fill="var(--potRim)"/>
       <g fill="#6f9a7a"><path d="M152 112 C140 96 132 80 136 62 C148 74 152 92 152 112Z"/><path d="M152 112 C160 92 172 82 186 80 C180 96 168 106 152 112Z"/><path d="M152 112 C148 98 144 88 126 86 C130 100 140 108 152 112Z"/><path d="M152 112 C154 90 160 74 168 60 C170 80 164 98 152 112Z" fill="#8fb39a"/></g></svg></div>
-    <div class="shelf" id="shelfRow"></div>
-    <div class="shelf-plank" aria-hidden="true"><i></i></div>
+    </template>
+    <div class="bookcase" id="shelfRow"></div>
     </div>
   </section>
 
@@ -1486,7 +1520,7 @@ body.dm-open .ch-back{display:inline-flex}
     <div class="foot-grid">
       <div class="fg-brand"><a class="logo" href="#prologue" data-jump="prologue"><span class="hanko">章</span>CHAPTER <i>/</i></a><p>Read what you feel. Find a book for your mood, read it right here and watch your garden grow — calm, kind and paper-free.</p></div>
       <nav class="fg-col" aria-label="Explore"><b>Explore</b><button data-jump="mood">Mood</button><button data-jump="picks">Your picks</button><button data-jump="discover">Discover</button><button data-jump="garden">Garden</button><button data-jump="shelf">Shelf</button></nav>
-      <nav class="fg-col" aria-label="You"><b>You</b><button data-open-lib>Library</button><button data-open-dm>Messages</button><button data-import>Add your own book</button><button data-auth="login" class="fg-signin">Sign in</button></nav>
+      <nav class="fg-col" aria-label="You"><b>You</b><button data-open-lib>Library</button><button data-open-dm>Messages</button><button data-import>Add your own book</button><button data-auth="login" class="fg-signin">Sign in</button><button class="fg-install" id="installApp" hidden>Install the app</button></nav>
       <div class="fg-col"><b>About</b><span>Free classics from Project Gutenberg, Open Library and Vikikaynak</span><span>Books you add are shared only with your friends</span><span>Made with care for readers</span></div>
     </div>
     <div class="foot-bar"><span>© 2026 CHAPTER / · 読書の友</span><button data-jump="prologue">Back to top ↑</button></div>
@@ -1638,7 +1672,7 @@ body.dm-open .ch-back{display:inline-flex}
     <h3 id="impH">Add your own <em>book.</em></h3>
     <p class="a-sub">PDF, EPUB or TXT. CHAPTER cleans the text — page numbers, running headers and broken lines — and splits it into chapters.</p>
     <div id="impPick">
-      <label class="drop" id="impDrop"><input type="file" id="impFile" accept=".pdf,.epub,.txt,application/pdf,application/epub+zip,text/plain" hidden><span class="drop-ico" aria-hidden="true">⇪</span><b>Drop a file here</b><span>or click to choose · PDF · EPUB · TXT</span></label>
+      <label class="drop" id="impDrop"><input type="file" id="impFile" accept=".pdf,.epub,.txt,application/pdf,application/epub+zip,text/plain"><span class="drop-ico" aria-hidden="true">⇪</span><b>Drop a file here</b><span>or click to choose · PDF · EPUB · TXT</span></label>
       <div class="imp-tips"><b>Free, legal books</b><span>(public domain)</span>
         <a href="https://www.gutenberg.org" target="_blank" rel="noopener">Project Gutenberg</a>
         <a href="https://standardebooks.org" target="_blank" rel="noopener">Standard Ebooks</a>
@@ -1721,7 +1755,7 @@ const TR = {
 'Keep scrolling — every page you turn is one step':'Kaydırmaya devam et — çevirdiğin her sayfa bir adım','The end of chapter one':'Birinci bölümün sonu','Find my book ↓':'Kitabımı bul ↓',
 'Turn the page to begin':'Başlamak için sayfayı çevir','How it works':'Nasıl çalışır','Your picks':'Seçimlerin','Calm · short read':'Sakin · kısa okuma','Read now':'Şimdi oku','Want to read':'Okumak istiyorum','Your garden':'Bahçen','280 pages · 28 flowers':'280 sayfa · 28 çiçek','Pick a mood':'Bir ruh hali seç','Pick your time':'Vaktini seç','Read in the app':'Uygulamada oku','Watch it grow':'Büyümesini izle','Ready — find your book ↓':'Hazır — kitabını bul ↓',
 'How are you feeling?':'Nasıl hissediyorsun?','Pick up to 2':'En fazla 2 seç','See my picks ↓':'Seçimlerimi gör ↓','Time you have':'Ne kadar vaktin var','Book length':'Kitap uzunluğu','Short':'Kısa','Longer':'Daha uzun','This week':'Bu hafta','Reading streak':'Okuma serisi','auto-synced ✓':'otomatik ✓','+1 flower':'+1 çiçek','previous · next':'önceki · sonraki',
-'Find a book in two taps':'İki dokunuşta kitap bul','No genres, no endless lists. Pick a mood and the time you have — matches update as you choose.':'Tür yok, bitmeyen listeler yok. Bir ruh hali ve ne kadar vaktin olduğunu seç — sonuçlar sen seçtikçe güncellenir.',
+'Find a book in two taps':'İki dokunuşta kitap bul','No endless lists. Pick a mood, a genre if you like, the time you have and a language — matches update as you choose.':'Bitmeyen listeler yok. Bir ruh hali, istersen bir tür, ne kadar vaktin olduğunu ve dili seç — sonuçlar sen seçtikçe güncellenir.','— Genre':'— Tür','optional · up to 2':'isteğe bağlı · en fazla 2','Genre':'Tür','Install the app':'Uygulamayı yükle','Show every shelf':'Tüm rafları göster','Fold the shelves':'Rafları topla',
 '— Mood':'— Ruh hali','pick up to 2':'en fazla 2 seç','— Time you have':'— Ne kadar vaktin var','book length':'kitap uzunluğu','— Book language':'— Kitap dili','edition':'baskı',
 'Calm':'Sakin','Curious':'Meraklı','Heartbroken':'Kalbi kırık','Adventurous':'Maceracı','Nostalgic':'Nostaljik','Dark':'Karanlık',
 'calm':'sakin','curious':'meraklı','heartbroken':'kalbi kırık','adventurous':'maceracı','nostalgic':'nostaljik','dark':'karanlık',
@@ -1950,6 +1984,12 @@ const TIMES = [
   {id:'any',label:'No rush',sub:'any length',max:Infinity}
 ];
 // pd: public-domain text included → fully readable excerpt in the reader
+const GENRE_OF = { prince:['children','classic','fantasy'], kitchen:['classic'], oldman:['adventure','classic'], mice:['classic'], kafka:['classic','fantasy'],
+  stranger:['classic','philosophy'], siddh:['philosophy','classic'], madonna:['romance','classic'], hill:['horror'], norwood:['romance'], klara:['scifi'],
+  martian:['scifi','adventure'], cosmos:['history','philosophy'], rebecca:['mystery','romance'], sapiens:['history'], hailmary:['scifi','adventure'],
+  alchemist:['adventure','philosophy','fantasy'], saatleri:['classic'], memed:['adventure','classic'], kokoro:['classic'], snowcountry:['romance','classic'],
+  botchan:['classic'], pillow:['classic','history'], konbini:['classic'], tutunamayanlar:['classic'], aylak:['classic'], calikusu:['romance','classic'],
+  askimemnu:['romance','classic'], kuyucakli:['romance','classic'], kirmizi:['mystery','history'], huzur:['romance','classic'] };
 const BOOKS = [
   {id:'prince',title:'The Little Prince',author:'Antoine de Saint-Exupéry',year:1943,pages:96,moods:['calm','nostalgic','heartbroken'],c:['#1f3a5f','#f3d36b'],blurb:'A pilot stranded in the desert meets a small traveller from another planet — a short, gentle book about friendship and what grown-ups forget.'},
   {id:'kitchen',title:'Kitchen',author:'Banana Yoshimoto',year:1988,pages:152,moods:['heartbroken','calm'],c:['#f0d9c8','#b8462e'],blurb:'After losing her grandmother, a young woman finds comfort in kitchens and in an unusual new family. Quiet, warm grief.'},
@@ -2037,8 +2077,10 @@ const state = {
   reduced: store.get('reduced', mq('(prefers-reduced-motion: reduce)')),
   theme: store.get('theme', mq('(prefers-color-scheme: light)') ? 'light' : 'dark'),
   user: store.get('user', null), nowId: store.get('nowId', null), days: [], notes: {},
-  libTab:'reading', shelfF:'all', langF:'all'
+  libTab:'reading', shelfF:'all', langF:store.get('langF','all'), genres:store.get('genres',[])
 };
+if(!['all','en','tr','fr','de','es','it'].includes(state.langF)) state.langF='all';
+if(!Array.isArray(state.genres)) state.genres=[];
 /* ---- per-account library: data.<email> or data.guest ---- */
 const userKey = () => state.user ? state.user.email.toLowerCase() : 'guest';
 const emptyWeek = () => [0,0,0,0,0,0,0];
@@ -2182,6 +2224,15 @@ $('#themeBtn').addEventListener('click', ()=>{ state.theme = state.theme==='ligh
 function renderChips(){
   $('#chips').innerHTML = MOODS.map(m=>`<button class="chip" style="--c:${m.color}" data-mood="${m.id}" aria-pressed="${state.moods.includes(m.id)}"><i></i>${m.label}</button>`).join('');
 }
+function renderGenres(){
+  $('#genres').innerHTML = GENRES.map(g=>`<button class="chip" style="--c:var(--mood)" data-genre="${g.id}" aria-pressed="${state.genres.includes(g.id)}" data-notr><i></i>${LANG==='tr'?g.tr:g.en}</button>`).join('');
+}
+$('#genres').addEventListener('click', e=>{
+  const b=e.target.closest('[data-genre]'); if(!b) return; const id=b.dataset.genre;
+  if(state.genres.includes(id)) state.genres=state.genres.filter(g=>g!==id);
+  else { if(state.genres.length>=2) state.genres.shift(); state.genres.push(id); }       // same rule as moods: the oldest makes room
+  store.set('genres', state.genres); renderGenres(); update();
+});
 function renderSeg(){
   const seg=$('#seg'); $$('button',seg).forEach(b=>b.remove());
   TIMES.forEach(t=>{ const b=document.createElement('button'); b.setAttribute('role','radio'); b.dataset.time=t.id; b.setAttribute('aria-checked', t.id===state.time); b.innerHTML=`${t.label}<small>${t.sub}</small>`; seg.appendChild(b); });
@@ -2213,7 +2264,9 @@ $('#readOnly').addEventListener('click', ()=>{ state.readOnly=!state.readOnly; $
 function matches(){
   const max = TIMES.find(t=>t.id===state.time).max;
   const score = b => b.moods.filter(m=>state.moods.includes(m)).length;
-  return BOOKS.filter(b=> b.pages<=max && (!state.readOnly || b.pd) && (state.langF==='all' || b.lang===state.langF) && (state.moods.length===0 || score(b)>0))
+  const gOk = b => !state.genres.length || (GENRE_OF[b.id]||b.genres||[]).some(g=>state.genres.includes(g));
+  const lOk = b => state.langF==='all' || b.lang===state.langF;      // French, German…: only live picks match
+  return BOOKS.filter(b=> b.pages<=max && (!state.readOnly || b.pd) && lOk(b) && gOk(b) && (state.moods.length===0 || state.genres.length>0 || score(b)>0))   // a genre narrows; the mood then only ranks
     .sort((a,b)=> score(b)-score(a) || (b.pd-a.pd) || a.pages-b.pages);
 }
 let shownCount = 0;
@@ -2221,13 +2274,9 @@ function setAccent(){ root.style.setProperty('--mood', state.moods.length ? mood
 function update(first){
   const list = matches();
   setAccent();
-  const el=$('#count');
-  if (HAS_GSAP && !state.reduced && !first){ const o={v:shownCount}; gsap.to(o,{v:list.length,duration:.6,ease:'power2.out',onUpdate:()=>el.textContent=Math.round(o.v)}); }
-  else el.textContent=list.length;
-  shownCount = list.length;
-  $('#countTxt').innerHTML = (list.length===1?'book matches':'books match') + '<br>' + (state.moods.length? state.moods.map(m=>MOODS.find(x=>x.id===m).label.toLowerCase()).join(' + ') : 'any mood') ;
-  $('#toPicks').disabled = list.length===0;
-  renderStack(list, first); renderPicks(list, first);
+  renderPicks(list, first);                                   // picks first, so the count below is the picks' own number
+  refreshCount();
+  renderStack(list.length ? list : livePicks(), first);
 }
 function renderStack(list, first){
   const stack=$('#stack'), top=list.slice(0,5);
@@ -2247,12 +2296,16 @@ function renderStack(list, first){
 
 /* ================= PICKS ================= */
 const PICKS = { key:null, items:null, busy:false, seed:0 };
-const GB_SEARCH = { down:false };   // set when www.gutenberg.org search answers 503; Gutendex is used for the rest of the visit
+const GB_SEARCH = {
+  retryAt:0,
+  get down(){ return Date.now()<this.retryAt; },
+  pause(){ this.retryAt=Date.now()+60000; }
+};
 const MOOD_Q = { calm:['nature','gardens','country life','poetry'], curious:['science fiction','detective','mystery','discovery'],
   heartbroken:['love stories','romance','letters'], adventurous:['adventure','sea stories','voyages','travel'],
   nostalgic:['childhood','fairy tales','school stories','family'], dark:['horror','ghost stories','gothic','vampires'] };
 const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
-const picksKey = () => state.moods.join('+')+'|'+state.langF+'|'+PICKS.seed;
+const picksKey = () => state.moods.join('+')+'|'+state.genres.join('+')+'|'+state.langF+'|'+PICKS.seed;
 function pickBook(it, moods){
   const h=hashH(it.id);
   return { id:it.id, pick:it, title:it.title, author:it.author||'', year:'—', lang:it.lang, moods, idx:h%40, c:PALETTE[h%PALETTE.length], cover:it.cover,
@@ -2263,25 +2316,26 @@ function pickBook(it, moods){
 const SRC_NAME = {gutenberg:'Project Gutenberg', googlebooks:'Google Books', openlibrary:'Open Library', wikisource:'Vikikaynak'};
 const MOOD_TR = { calm:['doğa','bahar','köy'], curious:['bilim','yolculuk','sır'], heartbroken:['aşk','sevda','ayrılık'],
   adventurous:['macera','deniz','savaş'], nostalgic:['çocukluk','hatıra','memleket'], dark:['korku','ölüm','hayalet'] };
-const pickWord = m => shuffle([...MOOD_Q[m]])[0];
+const pickWord = m => { const g=GENRES.find(x=>x.id===m); return g ? g.q : shuffle([...MOOD_Q[m]])[0]; };   // m = a mood or a genre
 const okTitle = t => t && !/\b(index|bibliograph|catalog|vol\.|volume \d|cilt \d|dizin)/i.test(t);
 async function picksGutenberg(m){                         // the Gutenberg catalogue (Gutendex when www.gutenberg.org is busy)
   const w=pickWord(m);
   if(!GB_SEARCH.down){
-    try{ const start=[1,26,51][Math.floor(Math.random()*3)];
-         return parseOPDS(await NET.get(`${GB}/ebooks/search.opds/?query=${encodeURIComponent(w)}&start_index=${start}`,'text')); }
-    catch(e){ GB_SEARCH.down=true; }
+    try{ const start=[1,26,51][Math.floor(Math.random()*3)], lf=state.langF==='all'?'':' l.'+state.langF;
+         return parseOPDS(await NET.get(`${GB}/ebooks/search.opds/?query=${encodeURIComponent(w+lf)}&start_index=${start}`,'text')); }
+    catch(e){ GB_SEARCH.pause(); }
   }
-  const d = await cached('gt:'+w, ()=>NET.get(`https://gutendex.com/books/?topic=${encodeURIComponent(w)}&languages=en`));
-  return (d.results||[]).filter(b=>b.copyright!==true).map(b=>{ const it=gbItem(b.id, b.title.replace(/\s*[:;]\s*$/,''), (b.authors[0]&&b.authors[0].name)||'', 'en');
+  const gl = state.langF==='all' ? 'en' : state.langF;
+  const d = await cached('gt:'+w+gl, ()=>NET.get(`https://gutendex.com/books/?topic=${encodeURIComponent(w)}&languages=${gl}`));
+  return (d.results||[]).filter(b=>b.copyright!==true).map(b=>{ const it=gbItem(b.id, b.title.replace(/\s*[:;]\s*$/,''), (b.authors[0]&&b.authors[0].name)||'', lang2((b.languages||[])[0]||gl));
     it.summary=(b.summaries||[])[0]||''; return it; });
 }
 async function picksGoogle(m){                           // Google Books free e-books, kept only when the clean text exists
   const w=pickWord(m), start=Math.floor(Math.random()*3)*10;
-  const url=`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent('subject:'+w)}&filter=free-ebooks&printType=books&langRestrict=en&maxResults=20&startIndex=${start}`;
+  const url=`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent('subject:'+w)}&filter=free-ebooks&printType=books&langRestrict=${state.langF==='all'?'en':state.langF}&maxResults=20&startIndex=${start}`;
   const d = await cached('gp:'+url, ()=>NET.get(url));
   const items = (d.items||[]).map(v=>{ const i=v.volumeInfo||{}, img=i.imageLinks||{};
-    return { src:'googlebooks', id:'b'+v.id, gbId:v.id, title:i.title||'', author:(i.authors||[])[0]||'', year:(i.publishedDate||'').slice(0,4), lang:'en', free:true,
+    return { src:'googlebooks', id:'b'+v.id, gbId:v.id, title:i.title||'', author:(i.authors||[])[0]||'', year:(i.publishedDate||'').slice(0,4), lang:lang2(i.language), free:true,
       cover:(img.thumbnail||'').replace(/^http:/,'https:').replace('&edge=curl','')||null, summary:(i.description||'').replace(/<[^>]+>/g,''),
       link:i.previewLink||i.infoLink, preview:true }; }).filter(it=>okTitle(it.title) && it.author);
   const some = shuffle(items).slice(0,6);
@@ -2290,80 +2344,133 @@ async function picksGoogle(m){                           // Google Books free e-
 }
 async function picksOpenLibrary(m){                      // Open Library books that have a Gutenberg edition (so they open here)
   const w=pickWord(m), page=1+Math.floor(Math.random()*3);
-  const url=`https://openlibrary.org/search.json?q=${encodeURIComponent('subject:"'+w+'" ebook_access:public')}&fields=key,title,author_name,first_publish_year,cover_i,id_project_gutenberg&limit=40&page=${page}&language=eng`;
+  const url=`https://openlibrary.org/search.json?q=${encodeURIComponent('subject:"'+w+'" ebook_access:public')}&fields=key,title,author_name,first_publish_year,cover_i,id_project_gutenberg&limit=40&page=${page}${olLangParam()||'&language=eng'}`;
   const d = await cached('op:'+url, ()=>NET.get(url));
   return (d.docs||[]).filter(b=>(b.id_project_gutenberg||[]).length && okTitle(b.title)).map(b=>{
-    const pg=+b.id_project_gutenberg[0], it=gbItem(pg, b.title, (b.author_name||[])[0]||'', 'en');
+    const pg=+b.id_project_gutenberg[0], it=gbItem(pg, b.title, (b.author_name||[])[0]||'', state.langF==='all'?'en':state.langF);
     return Object.assign(it, { via:'openlibrary', olKey:b.key, year:b.first_publish_year||'', cover: b.cover_i ? olCover(b.cover_i) : it.cover }); });
 }
 async function picksWikisource(m){                       // Turkish works on Vikikaynak, long enough to read
-  const w=shuffle([...(MOOD_TR[m]||['roman'])])[0];
+  const g=GENRES.find(x=>x.id===m), w = g ? g.ws : shuffle([...(MOOD_TR[m]||['roman'])])[0];
   const d = await cached('wp:'+w, ()=>NET.get(`https://tr.wikisource.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(w)}&srnamespace=0&srlimit=40&format=json&origin=*`));
   return ((d.query&&d.query.search)||[]).filter(r=>!r.title.includes('/') && r.wordcount>2500 && okTitle(r.title))
     .map(r=>({ src:'wikisource', id:'w'+r.pageid, title:r.title, author:'', year:'', lang:'tr', cover:null, free:true, wsTitle:r.title, words:r.wordcount,
       summary:(r.snippet||'').replace(/<[^>]+>/g,'') }));
 }
-async function loadApiPicks(){
-  const moods = state.moods.length ? state.moods : shuffle(Object.keys(MOOD_Q)).slice(0,2);
-  const en = state.langF!=='tr', trk = state.langF!=='en';
+async function loadApiPicks(onPart){
+  const moods0 = state.moods.length ? state.moods : shuffle(Object.keys(MOOD_Q)).slice(0,2);
+  const moods = state.genres.length ? state.genres : moods0;            // a chosen genre steers the live search
+  const tagOf = m => GENRES.some(g=>g.id===m) ? moods0[0] : m;
+  const L = state.langF, en = L!=='tr', trk = L==='tr' || L==='all';
   const sources = [ en&&['gutenberg',picksGutenberg], en&&['googlebooks',picksGoogle], en&&['openlibrary',picksOpenLibrary], trk&&['wikisource',picksWikisource] ].filter(Boolean);
+  const got = [];
+  const curated = [];
+  if((L==='all'||L==='en') && !state.genres.length)
+    moods.forEach(m=>{ const [choice]=shuffle([...(MOOD_PICKS[m]||[])]);
+      if(choice){ const [id,title,author]=choice; curated.push({it:{...gbItem(id,title,author,'en'),curated:true},m}); }
+    });
+  const assemble = () => {
+    const per={}; got.forEach(g=>{ (per[g.name]=per[g.name]||[]).push(...g.items.map(it=>({it, m:g.m}))); });
+    const out=[], seen=new Set(LOCAL_TITLES()), names=['gutenberg','googlebooks','openlibrary','wikisource'].filter(n=>per[n]), want=14;
+    for(let round=0; out.length<want && round<14; round++)     // one from each source in turn → a real mix
+      for(const n of names){ const x=per[n][round]; if(!x) continue;
+        const key=normT(x.it.title); if(seen.has(x.it.id)||seen.has(key)) continue; seen.add(x.it.id); seen.add(key);
+        out.push(pickBook(x.it,[x.m])); if(out.length>=want) break; }
+    for(const {it,m} of curated){
+      const key=normT(it.title);
+      if(out.length>=want || seen.has(it.id) || seen.has(key)) continue;
+      seen.add(it.id); seen.add(key); out.push(pickBook(it,[m]));
+    }
+    return out;
+  };
   const jobs = [];
   sources.forEach(([name,fn])=>moods.slice(0,2).forEach(m=>jobs.push(
-    withTimeout(fn(m), 9000).then(items=>({name, m, items:shuffle(items||[])})).catch(e=>{ console.warn('picks:',name,e.message||e); return {name, m, items:[]}; }))));
-  const got = await Promise.all(jobs);                         // a slow source never holds the others up for more than 9 s
-  const per = {}; got.forEach(g=>{ (per[g.name]=per[g.name]||[]).push(...g.items.map(it=>({it, m:g.m}))); });
-  if(en) moods.forEach(m=>shuffle([...(MOOD_PICKS[m]||[])]).slice(0,1).forEach(([id,t,a])=>(per.gutenberg=per.gutenberg||[]).push({it:gbItem(id,t,a,'en'), m})));
-  const out=[], seen=new Set(), names=Object.keys(per), want=14;
-  for(let round=0; out.length<want && round<12; round++)       // take one from each source in turn → a real mix
-    for(const n of names){ const x=per[n][round]; if(!x) continue;
-      const key=normT(x.it.title); if(seen.has(x.it.id)||seen.has(key)) continue; seen.add(x.it.id); seen.add(key);
-      out.push(pickBook(x.it,[x.m])); if(out.length>=want) break; }
+    withTimeout(fn(m), 9000).then(items=>({name, m:tagOf(m), items:shuffle(items||[])})).catch(e=>{ console.warn('picks:',name,e.message||e); return {name, m, items:[]}; })
+      .then(g=>{ got.push(g); if(onPart) onPart(assemble()); }))));        // show each source as soon as it answers
+  if(onPart && curated.length) onPart(assemble());
+  await Promise.all(jobs);                                     // a slow source never holds the others up for more than 9 s
+  const out = assemble();
   if(!out.length) return null;
   const gids = out.filter(b=>b.pick.gid && !b.pick.summary).map(b=>b.pick.gid);
   if(gids.length) NET.get(`https://gutendex.com/books/?ids=${gids.join(',')}`).then(d=>{     // back-cover summaries, best effort
     (d.results||[]).forEach(r=>{ const b=out.find(x=>x.pick.gid===r.id); if(b && r.summaries && r.summaries[0]){ b.pick.summary=r.summaries[0]; Object.assign(b,{blurb:pickBook(b.pick,b.moods).blurb}); } });
-    if(PICKS.items===out) renderPicks(null,true);
+    if(PICKS.items===out){ savePicksCache(); renderPicks(null,true); }
   }).catch(()=>{});
   return out;
 }
+/* Last picks per choice, kept for 30 minutes: reopening the app shows them at once instead of waiting for the sources */
+const picksCacheKey = () => 'v2|'+picksKey().replace(/\|\d+$/,'');
+function savePicksCache(){ if(!PICKS.items) return; const all=store.get('picksCache',{}); const now=Date.now();
+  all[picksCacheKey()] = {t:now, items:PICKS.items.map(b=>({it:b.pick, m:b.moods}))};
+  Object.keys(all).forEach(k=>{ if(now-all[k].t>30*60e3) delete all[k]; }); store.set('picksCache', all); }
+function loadPicksCache(){ const c=(store.get('picksCache',{})||{})[picksCacheKey()];
+  return c && Date.now()-c.t < 30*60e3 ? c.items.map(x=>pickBook(x.it,x.m)) : null; }
+let picksT=null, picksRequest=0;
 function refreshApiPicks(force){
   if(force) PICKS.seed++;
-  const key=picksKey(); if(!force && (PICKS.key===key || PICKS.busy)) return;
-  PICKS.key=key; PICKS.busy=true; PICKS.items=null;
-  loadApiPicks().then(list=>{ if(PICKS.key===key){ PICKS.items=list; renderPicks(null); } })
-    .catch(e=>{ console.warn('picks: using the built-in catalogue', e); if(PICKS.key===key){ PICKS.items=null; renderPicks(null); } })
-    .finally(()=>{ PICKS.busy=false; });
+  const key=picksKey(); if(!force && PICKS.key===key) return;
+  const request=++picksRequest;
+  PICKS.key=key; PICKS.items=null; PICKS.busy=true;
+  if(!force){ const c=loadPicksCache(); if(c && c.length){ PICKS.items=c; PICKS.busy=false; renderPicks(null); refreshCount(); return; } }
+  refreshCount();
+  clearTimeout(picksT);                                        // quick taps on moods/genres: only the last choice is fetched
+  picksT=setTimeout(()=>{
+    if(request!==picksRequest) return;
+    loadApiPicks(part=>{ if(request===picksRequest && part.length){ PICKS.items=part; renderPicks(null,true); refreshCount(); } })
+      .then(list=>{ if(request===picksRequest){ PICKS.items=list; savePicksCache(); } })
+      .catch(e=>{ console.warn('picks: using the built-in catalogue', e); if(request===picksRequest) PICKS.items=null; })
+      .finally(()=>{ if(request===picksRequest){ PICKS.busy=false; renderPicks(null,true); refreshCount(); } });
+  }, force ? 0 : 280);
 }
-function renderPicks(list, first){
-  if(!list) list = matches();
-  if(PICKS.key!==picksKey() && !PICKS.busy) refreshApiPicks();
-  if(PICKS.items && PICKS.items.length) return renderApiPicks(first);
-  const track=$('#track');
+/* One number everywhere: "books match" = exactly the books in Your picks (your shelf's matches + live picks) */
+const LOCAL_TITLES = () => matches().map(b=>normT(bt(b)));
+const livePicks = () => PICKS.key===picksKey() && PICKS.items ? PICKS.items : [];
+function picksTotal(){ return matches().length + livePicks().length; }
+function refreshCount(){
+  const local=matches().length, live=livePicks().length, total=local+live, el=$('#count'); if(!el) return;
+  el.textContent = total; shownCount = total;
+  const what = state.moods.length ? state.moods.map(m=>MOODS.find(x=>x.id===m).label.toLowerCase()).join(' + ') : (LANG==='tr'?'her ruh hali':'any mood');
+  const g = state.genres.map(id=>{ const x=GENRES.find(y=>y.id===id); return LANG==='tr'?x.tr:x.en.toLowerCase(); }).join(' + ');
+  const live2 = PICKS.busy ? (LANG==='tr'?' · daha fazlası aranıyor…':' · finding more…') : '';
+  $('#countTxt').innerHTML = `${LANG==='tr'?'kitap eşleşti':(total===1?'book matches':'books match')}${live2}<br>${esc(what)}${g?' · '+esc(g):''}`;
+  $('#toPicks').disabled = total===0 && !PICKS.busy;
+  if(!local && live) renderStack(livePicks(), true);
+}
+function renderPicks(local, first){
+  if(!local) local = matches();
+  if(PICKS.key!==picksKey()) refreshApiPicks();
+  const items=livePicks(), track=$('#track');
+  const live=items.filter(b=>!b.pick.curated), curated=items.filter(b=>b.pick.curated);
   const tags = b => b.moods.map(m=>`<span class="tag ${state.moods.includes(m)?'on':''}" style="--c:${moodColor(m)}">${m}</span>`).join('') + (b.pd?'<span class="tag read">readable</span>':'') + `<span class="tag">${b.lang.toUpperCase()}</span>`;
-  let html = list.map(b=>`
-    <button class="card" data-open="${b.id}" data-cursor="Open" aria-label="Open ${esc(bt(b))}">
+  const localHTML = local.map(b=>`
+    <button class="card" data-open="${esc(b.id)}" data-cursor="Open" aria-label="Open ${esc(bt(b))}">
       <div class="flip">${coverHTML(b)}${backHTML(b)}</div>
       <div class="card-meta"><span class="t">${esc(bt(b))}</span><span class="a">${esc(b.author)} · ${b.pages} pages · ~${b.hours} h</span><div class="tags">${tags(b)}</div></div>
     </button>`).join('');
-  html += list.length
-    ? `<div class="card-end"><p>That’s every match for this mood.</p><button data-jump="mood">← Change mood</button></div>`
-    : `<div class="card-end"><p>Nothing here yet.</p><button data-jump="mood">← Try another mood or more time</button></div>`;
-  track.innerHTML = html;
-  $('#picksMeta').textContent = `${list.length} ${list.length===1?'book':'books'} · ${TIMES.find(t=>t.id===state.time).label.toLowerCase()}`;
-  if (HAS_GSAP && !state.reduced && !first) gsap.from('#track > *',{y:50,opacity:0,stagger:.03,duration:.7,ease:'expo.out'});
-  requestRefresh();
-}
-function renderApiPicks(first){
-  const list=PICKS.items, track=$('#track');
-  const tags = b => b.moods.map(m=>`<span class="tag on" style="--c:${moodColor(m)}">${m}</span>`).join('') + `<span class="tag read">${tr('Free · read here')}</span><span class="tag">${b.lang.toUpperCase()}</span><span class="tag" data-notr>${SRC_NAME[b.pick.via||b.pick.src]||''}</span>`;
-  track.innerHTML = list.map(b=>{ const have=inLibrary(b.pick); return `
-    <button class="card" data-pick="${b.id}" data-cursor="Read" aria-label="${esc(tr('Read'))} ${esc(b.title)}">
+  const pickTags = b => b.moods.map(m=>`<span class="tag on" style="--c:${moodColor(m)}">${m}</span>`).join('') + `<span class="tag read">${tr('Free · read here')}</span><span class="tag">${b.lang.toUpperCase()}</span><span class="tag" data-notr>${SRC_NAME[b.pick.via||b.pick.src]||''}</span>`;
+  const pickCard = b=>{ const have=inLibrary(b.pick); return `
+    <button class="card" data-pick="${esc(b.id)}" data-cursor="Read" aria-label="${esc(tr('Read'))} ${esc(b.title)}">
       <div class="flip">${coverHTML(b)}<div class="bc" style="--cbg:${b.c[0]};--cfg:${b.c[1]}"><span class="bk-k">${esc(b.author)}</span><p class="bk-b">${esc(b.blurb)}</p><div class="bk-f"><span data-notr>${SRC_NAME[b.pick.via||b.pick.src]||'Project Gutenberg'}</span><span>${tr(have?'In your library ✓':'Readable in app')}</span><span class="bk-bar"></span></div></div></div>
-      <div class="card-meta"><span class="t" data-notr>${esc(b.title)}</span><span class="a" data-notr>${esc(b.author)}</span><div class="tags">${tags(b)}</div></div>
-    </button>`; }).join('')
-    + `<div class="card-end"><p>${tr('New books every time.')}</p><button data-shuffle>↻ ${tr('Shuffle picks')}</button><button data-jump="mood">← ${tr('Change mood')}</button></div>`;
-  const nSrc = new Set(list.map(b=>b.pick.via||b.pick.src)).size;
-  $('#picksMeta').textContent = LANG==='tr' ? `${list.length} ücretsiz kitap · ${nSrc} kaynaktan canlı` : `${list.length} free books · live from ${nSrc} source${nSrc===1?'':'s'}`;
+      <div class="card-meta"><span class="t" data-notr>${esc(b.title)}</span><span class="a" data-notr>${esc(b.author)}</span><div class="tags">${pickTags(b)}</div></div>
+    </button>`; };
+  const end = items.length ? `<div class="card-end"><p>${tr('New books every time.')}</p><button data-shuffle>↻ ${tr('Shuffle picks')}</button><button data-jump="mood">← ${tr('Change mood')}</button></div>` : local.length
+    ? `<div class="card-end"><p>That’s every match for this mood.</p><button data-jump="mood">← Change mood</button></div>`
+    : PICKS.busy ? `<div class="card-end"><p>${LANG==='tr'?'Kitaplar aranıyor…':'Finding books…'}</p></div>`
+    : `<div class="card-end"><p>Nothing here yet.</p><button data-jump="mood">← Try another mood or more time</button></div>`;
+  const focused = track.contains(document.activeElement) ? document.activeElement : null;
+  track.innerHTML = live.map(pickCard).join('') + localHTML + curated.map(pickCard).join('') + end;
+  if(focused){
+    const replacement = Array.from(track.querySelectorAll('button')).find(btn=>
+      ['pick','open','shuffle','jump'].some(key=>key in focused.dataset && focused.dataset[key]===btn.dataset[key]));
+    if(replacement) replacement.focus({preventScroll:true});
+  }
+  const collection = local.length + curated.length, total=live.length + collection;
+  const sources = new Set(live.map(b=>b.pick.via||b.pick.src)).size;
+  const countLabel = LANG==='tr' ? `${total} kitap` : `${total} ${total===1?'book':'books'}`;
+  const breakdown = [];
+  if(live.length) breakdown.push(LANG==='tr' ? `${sources} kaynaktan ${live.length} canlı` : `${live.length} live from ${sources} source${sources===1?'':'s'}`);
+  if(collection) breakdown.push(LANG==='tr' ? `${collection} koleksiyonumuzdan` : `${collection} from our collection`);
+  $('#picksMeta').textContent = breakdown.length ? countLabel+' · '+breakdown.join(', ') : countLabel;
   if (HAS_GSAP && !state.reduced && !first) gsap.from('#track > *',{y:50,opacity:0,stagger:.03,duration:.7,ease:'expo.out'});
   requestRefresh();
 }
@@ -2390,9 +2497,9 @@ function lockScroll(on){
 }
 document.addEventListener('touchmove', e=>{                      // iOS: block page drag behind open overlays, allow scrolling inside panels
   if(!root.classList.contains('locked')) return;
-  if(selecting()) return;
+  if(selecting() || e.touches.length>1 || e.target.closest('#rnList,#npText')) return;
   const sc=e.target.closest('[data-lenis-prevent], .lb-list, #lbList, #cList, .d-scroll, .a-card, #recapBody, #impReview, .imp-card');
-  if(!sc || $('#reader').classList.contains('open')) e.preventDefault();
+  if(!sc || e.target.closest('#rBook')) e.preventDefault();
 }, {passive:false});
 function openDetail(id, src){
   const b=byId(id); if(!b) return;
@@ -2801,9 +2908,17 @@ $('#rR').addEventListener('click', e=>{ if(selecting() || e.target.closest('mark
 $('#rL').addEventListener('click', e=>{ if(selecting() || e.target.closest('mark.hl,.postit')) return; flip(-1); });
 $('#fsUp').addEventListener('click', ()=>{ R.fs=Math.min(1.35,+(R.fs+.1).toFixed(2)); store.set('fs',R.fs); repaginateKeep(); });
 $('#fsDown').addEventListener('click', ()=>{ R.fs=Math.max(.8,+(R.fs-.1).toFixed(2)); store.set('fs',R.fs); repaginateKeep(); });
-let tx0=null;
-$('#rStage').addEventListener('touchstart', e=>{ tx0=e.touches[0].clientX; }, {passive:true});
-$('#rStage').addEventListener('touchend', e=>{ if(tx0===null) return; const dx=e.changedTouches[0].clientX-tx0; if(Math.abs(dx)>45) flip(dx<0?1:-1); tx0=null; });
+let swipeStart=null;
+$('#rBook').addEventListener('touchstart', e=>{
+  swipeStart=e.touches.length===1 ? e.touches[0] : null;
+}, {passive:true});
+$('#rBook').addEventListener('touchcancel', ()=>{ swipeStart=null; });
+$('#rBook').addEventListener('touchend', e=>{
+  const start=swipeStart; swipeStart=null;
+  if(!start || selecting()) return;
+  const dx=e.changedTouches[0].clientX-start.clientX, dy=e.changedTouches[0].clientY-start.clientY;
+  if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)){ e.preventDefault(); flip(dx<0?1:-1); }
+}, {passive:false});
 $('#continueBtn').addEventListener('click', ()=>{ const c=currentRead(); if(c) openReader(c.b); else { toast('Nothing in progress yet — pick a book first'); jump('mood'); } });
 
 /* ================= HABIT ================= */
@@ -2846,34 +2961,77 @@ function renderHabit(animate){
 /* ================= SHELF (3D) ================= */
 function hashH(id){ let h=0; for(const c of id) h=(h*31+c.charCodeAt(0))%997; return h; }
 const ST_LABEL={reading:'Reading',want:'Want to read',done:'Finished'};
-function ghostSpines(n){                                                  // empty places on the shelf, waiting for the next book
-  if(state.shelfF!=='all' && n) return '';
-  const k=innerWidth<700?.66:1, want=Math.max(0,Math.min(innerWidth<700?2:4,(innerWidth<700?5:8)-n)); let h='';
-  for(let i=0;i<want;i++){ const hh=Math.round((236+((i*53)%60))*k), t=Math.round((34+((i*17)%22))*k);
-    h+=`<button class="slot-ghost" ${state.user?'data-jump="picks"':'data-auth="signup"'} style="--t:${t}px;--h:${hh}px" aria-label="${tr('Add a book to your shelf')}">+${i===0?`<span class="gl">${tr(n?'room for one more':'your first book goes here')}</span>`:''}</button>`; }
-  return h;
-}
 function renderShelf(newId){
-  const row=$('#shelfRow'), all=listBy('all'), items=listBy(state.shelfF);
+  const box=$('#shelfRow'), all=listBy('all'), items=listBy(state.shelfF);
   $('#libCount').textContent=all.length;
-  $('#shelfMeta').textContent=`${all.length} ${all.length===1?'book':'books'}`;
+  $('#shelfMeta').textContent=`${all.length} ${tr(all.length===1?'book':'books')}`;
+  const phone=innerWidth<=700, scale=phone?.73:1, css=getComputedStyle(box);
+  const width=box.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight);
+  const gap=parseFloat(css.getPropertyValue('--book-gap'));
+  const plank='<div class="shelf-plank" aria-hidden="true"></div>';
+  const decor=$('#shelfDecor').content;
+  const ghostWidth=phone?30:35;
+  function addSlot(label){
+    return `<button class="slot-ghost" ${state.user?'data-jump="picks"':'data-auth="signup"'} style="--t:${ghostWidth}px;--h:${Math.round(170*scale)}px" aria-label="${tr('Add a book to your shelf')}">+<span class="gl">${tr(label)}</span></button>`;
+  }
   if(!items.length){
-    row.innerHTML = ghostSpines(0) + (!state.user ? `<div class="shelf-empty">${tr('Sign in to start your shelf.')} <button data-auth="signup">${tr('Create an account →')}</button></div>`
-      : `<div class="shelf-empty">${state.shelfF==='all'?'Your shelf is empty.':`Nothing in “${ST_LABEL[state.shelfF]}” yet.`} <button data-jump="picks">Browse your picks →</button></div>`);
-  } else row.innerHTML = items.map(({b,status,read})=>{
-    const k=innerWidth<700?.66:1, h=Math.round((230+hashH(b.id)%70)*k), w=Math.round(h*0.66), t=Math.max(18,Math.round(Math.min(70,28+b.pages/14)*k));
-    const tip = status==='reading' ? `Reading · ${Math.round(read/b.pages*100)}%` : ST_LABEL[status];
-    return `<button class="slot" data-open="${b.id}" data-cursor="Open" style="--t:${t}px;--h:${h}px;--w:${w}px;--cbg:${b.c[0]};--cfg:${b.c[1]}" aria-label="Open ${esc(bt(b))} (${tip})">
-      <div class="bk"><div class="bf front">${coverHTML(b)}</div><div class="bf back"></div><div class="bf spine"><span>${esc(bt(b)).replace(/’/g,"'")}</span></div><div class="bf pages"></div><div class="bf top"></div></div>
-      <span class="slot-tip">${tip}</span></button>`;}).join('') + ghostSpines(items.length);
-  if (HAS_GSAP && !state.reduced){
+    const message=!state.user ? tr('Sign in to start your shelf.') : state.shelfF==='all' ? tr('Your shelf is empty.')
+      : LANG==='tr' ? `“${tr(ST_LABEL[state.shelfF])}” rafında henüz kitap yok.` : `Nothing in “${ST_LABEL[state.shelfF]}” yet.`;
+    const action=state.user ? `<button data-jump="picks">${tr('Browse your picks →')}</button>` : `<button data-auth="signup">${tr('Create an account →')}</button>`;
+    box.innerHTML=`<div class="tier center"><div class="shelf">${addSlot('your first book goes here')}</div>${plank}<div class="shelf-empty">${message} ${action}</div></div>`;
+    $('.shelf',box).append(decor.cloneNode(true));
+    return;
+  }
+  const slots=items.map(item=>{
+    const b=item.b, hash=hashH(String(b.id));
+    const h=Math.round((174+hash%54)*scale), w=Math.round(h*.65);
+    const t=Math.max(26,Math.round(Math.min(48,24+(b.pages||150)/18)*scale));
+    return {...item, h,w,t,binding:hash%3};
+  });
+  const total=slots.reduce((sum,s)=>sum+s.t+gap,-gap);
+  const groups=state.shelfF==='all' && total>width
+    ? Object.entries(ST_LABEL).map(([st,label])=>({label:tr(label),slots:slots.filter(s=>s.status===st)}))
+    : [{slots}];
+  const rows=[];
+  groups.forEach(group=>{
+    let row;
+    group.slots.forEach(slot=>{
+      if(!row || row.used+gap+slot.t>width){
+        row={slots:[],used:0,label:row?null:group.label,count:group.slots.length};
+        rows.push(row);
+      }
+      slot.left=row.used+(row.slots.length?gap:0);
+      row.used=slot.left+slot.t;
+      row.slots.push(slot);
+    });
+  });
+  const limit=phone?2:3;
+  if(newId && rows.findIndex(row=>row.slots.some(s=>s.b.id===newId))>=limit) state.shelfOpen=true;
+  const visible=state.shelfOpen?rows:rows.slice(0,limit);
+  function bookSlot({b,status,read,t,h,w,binding,left}){
+    const title=esc(bt(b)), tip=status==='reading' ? `${tr('Reading')} · ${Math.round(read/Math.max(1,b.pages)*100)}%` : tr(ST_LABEL[status]);
+    const center=left+t/2;
+    const shift=Math.round(Math.max(w/2+3,Math.min(width-w/2-3,center))-center);
+    return `<button class="slot binding-${binding}" data-open="${esc(b.id)}" data-cursor="Open" style="--t:${t}px;--h:${h}px;--w:${w}px;--shift:${shift}px;--cbg:${b.c[0]};--cfg:${b.c[1]}" aria-label="${LANG==='tr'?'Aç':'Open'} · ${title} (${tip})">
+      <div class="bk"><div class="bf front">${coverHTML(b)}</div><div class="bf back"></div><div class="bf spine"><span>${title}</span></div><div class="bf pages"></div><div class="bf top"></div></div>
+      <span class="slot-tip">${tip}</span></button>`;
+  }
+  box.innerHTML=visible.map((row,i)=>{
+    const room=width-row.used;
+    const ghost=i===rows.length-1 && state.shelfF==='all' && items.length<5 && room>110 ? addSlot('room for one more') : '';
+    const plant=i===visible.length-1 && room>(ghost?110:0)+Math.min(125,width*.23)+12 ? decor.querySelector('.r').outerHTML : '';
+    return `<div class="tier">${row.label?`<div class="tier-label"><b>${esc(row.label)}</b><span>${row.count}</span></div>`:''}<div class="shelf">${row.slots.map(bookSlot).join('')}${ghost}${plant}</div>${plank}</div>`;
+  }).join('')+(rows.length>limit ? `<button class="case-more" data-case-more aria-expanded="${!!state.shelfOpen}">${state.shelfOpen ? tr('Fold the shelves') : `${tr('Show every shelf')} · +${rows.length-limit}`}</button>` : '');
+  if(newId && HAS_GSAP && !state.reduced){
     gsap.fromTo('#libCount',{scale:1.6},{scale:1,duration:.6,ease:'elastic.out(1,.4)'});
-    if(newId){ const s=$(`.slot[data-open="${newId}"]`,row); if(s) gsap.from(s,{y:-180,rotation:-10,opacity:0,duration:1,ease:'bounce.out'}); }
+    const added=$$('.slot',box).find(el=>el.dataset.open===newId);
+    if(added) gsap.from(added,{y:-25,opacity:0,duration:.4,ease:'power2.out'});
   }
 }
+document.addEventListener('click',e=>{ const m=e.target.closest('[data-case-more]'); if(!m) return; state.shelfOpen=!state.shelfOpen; renderShelf(); $('#shelfRow .case-more')?.focus({preventScroll:true}); });
 const TOUCHY = window.matchMedia ? matchMedia('(hover:none),(pointer:coarse)') : {matches:false};
 document.addEventListener('click',e=>{                                 // phones: tap once = pull the book out, tap again = open it
-  if(!TOUCHY.matches) return;
+  if(!TOUCHY.matches || e.detail===0) return;
   const s=e.target.closest('#shelfRow .slot');
   const others=$$('#shelfRow .slot.pulled2').filter(x=>x!==s);
   others.forEach(x=>{ x.classList.remove('pulled2'); const t=$('.slot-tip',x); if(t&&t.dataset.tip) t.textContent=t.dataset.tip; });
@@ -2886,7 +3044,7 @@ document.addEventListener('click',e=>{                                 // phones
   s.classList.remove('pulled2');
 }, true);
 $('#shelfTabs').addEventListener('click',e=>{ const b=e.target.closest('[data-f]'); if(!b) return; state.shelfF=b.dataset.f;
-  $$('#shelfTabs [data-f]').forEach(x=>x.setAttribute('aria-selected',x===b)); renderShelf(); });
+  $$('#shelfTabs [data-f]').forEach(x=>x.setAttribute('aria-pressed',x===b)); renderShelf(); });
 
 /* ================= LIBRARY DRAWER ================= */
 function renderLib(){
@@ -3126,12 +3284,15 @@ window.addEventListener('scroll', onScroll, {passive:true});
 
 /* ================= GSAP CHOREOGRAPHY ================= */
 let ctx=null, mode=null;
+function scrollMode(){
+  if(state.reduced) return 'reduced';
+  return mq('(min-width:901px) and (min-height:740px) and (pointer:fine)') ? 'pinned' : 'native';
+}
 function buildScroll(){
-  const narrow = innerWidth<=900;
-  mode = (state.reduced?'r':'m') + (narrow?'n':'w');
+  mode = scrollMode();
   if (!HAS_ST){ $('#picks').classList.add('native'); return; }
   if (ctx) ctx.revert();
-  const pin = !state.reduced && !narrow;
+  const pin = mode==='pinned';
   $('#picks').classList.toggle('pinmode', pin); $('#picks').classList.toggle('native', !pin);
   ctx = gsap.context(()=>{
     if (pin){
@@ -3329,6 +3490,18 @@ $('#motionBtn').addEventListener('click',()=>{ state.reduced=!state.reduced; sto
 
 document.addEventListener('keydown',e=>{
   if (e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.key==='Tab'){
+    const dialogs=$$('.ov.open').sort((a,b)=>Number(getComputedStyle(a).zIndex)-Number(getComputedStyle(b).zIndex));
+    const dialog=dialogs.pop();
+    if(!dialog) return;
+    const controls=$$('button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"], iframe',dialog)
+      .filter(el=>el.tabIndex>=0 && el.getClientRects().length && getComputedStyle(el).visibility==='visible');
+    const first=controls[0], last=controls[controls.length-1];
+    if(first && (!controls.includes(document.activeElement) || document.activeElement===(e.shiftKey?first:last))){
+      e.preventDefault(); (e.shiftKey?last:first).focus();
+    }
+    return;
+  }
   const readerOpen=$('#reader').classList.contains('open'), detailOpen=$('#detail').classList.contains('open'), authOpen=$('#auth').classList.contains('open');
   if (e.key==='Escape' && !$('#streakPop').hidden){ toggleStreak(false); return; }
   if (e.key==='Escape' && $('#notePop').classList.contains('open')){ closeNotePop(); return; }
@@ -3345,7 +3518,7 @@ document.addEventListener('keydown',e=>{
 });
 let rT;
 window.addEventListener('resize',()=>{ clearTimeout(rT); rT=setTimeout(()=>{
-  const m=(state.reduced?'r':'m')+(innerWidth<=900?'n':'w'); if (m!==mode) buildScroll();
+  if(scrollMode()!==mode) buildScroll();
   if ($('#reader').classList.contains('open')) repaginateKeep();
   renderShelf();
   updateStory();
@@ -3764,7 +3937,7 @@ function applyLang(){
   buildStory();
   trTree(document.body);
   applyTheme(); $('#motionTxt').textContent = LANG==='tr' ? (state.reduced?'Kapalı':'Açık') : (state.reduced?'Off':'On');
-  renderChips(); renderSeg(); renderLangF(); update(true); renderShelf(); renderLib(); renderHabit(false); renderUser(); renderGarden(); renderFriends();
+  renderChips(); renderGenres(); renderSeg(); renderLangF(); update(true); renderShelf(); renderLib(); renderHabit(false); renderUser(); renderGarden(); renderFriends();
   if(current && $('#detail').classList.contains('open')) openDetail(current.id);
   renderDiscover(); dsStatus(); paintMoodTitle();
 }
@@ -3772,9 +3945,9 @@ $('#langBtn').addEventListener('click',()=>{ LANG = LANG==='tr'?'en':'tr'; store
 
 /* book-language filter */
 function renderLangF(){
-  $('#langF').innerHTML=[['all','All'],['en','English'],['tr','Turkish']].map(([v,l])=>`<button class="pill" role="radio" data-lf="${v}" aria-checked="${state.langF===v}">${tr(l)}${v==='all'?'':` <small>${v.toUpperCase()}</small>`}</button>`).join('');
+  $('#langF').innerHTML=LANGS.map(l=>`<button class="pill" role="radio" data-lf="${l.id}" aria-checked="${state.langF===l.id}" data-notr>${LANG==='tr'?l.tr:l.en}${l.id==='all'?'':` <small>${l.id.toUpperCase()}</small>`}</button>`).join('');
 }
-$('#langF').addEventListener('click',e=>{ const b=e.target.closest('[data-lf]'); if(!b) return; state.langF=b.dataset.lf; renderLangF(); update(); });
+$('#langF').addEventListener('click',e=>{ const b=e.target.closest('[data-lf]'); if(!b) return; state.langF=b.dataset.lf; store.set('langF',state.langF); renderLangF(); update(); });
 
 /* ================= IMPORT: PDF / EPUB / TXT → clean, chaptered text → your own readable books ================= */
 const PDFJS_BASE = window.PDFJS_BASE || 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/';
@@ -4053,34 +4226,74 @@ function coverSrc(u){
   return i>=0 && /\.(jpg|png)$/.test(u) && /gutenberg|pglaf/.test(u) ? 'proxy?url='+encodeURIComponent('https://www.gutenberg.org'+u.slice(i)) : u;
 }
 const NET = {
-  proxy:null,
+  proxy:null, probe:null,
   async detect(){
     if(this.proxy!==null) return this.proxy;
     if(!/^https?:/.test(location.protocol)) return (this.proxy=false);
-    try{ const r=await fetch('proxy/ping',{cache:'no-store'}); this.proxy = r.ok && (await r.text()).trim()==='chapter-proxy'; }catch(e){ this.proxy=false; }
-    self.__chProxy=this.proxy;
-    return this.proxy;
+    if(!this.probe) this.probe=(async ()=>{
+      try{ const r=await fetch('proxy/ping',{cache:'no-store'}); this.proxy=r.ok && (await r.text()).trim()==='chapter-proxy'; }
+      catch(e){ this.proxy=false; }
+      self.__chProxy=this.proxy;
+      return this.proxy;
+    })();
+    return this.probe;
   },
   async get(url, as='json'){
-    const tries=[]; if(await this.detect()) tries.push('proxy?url='+encodeURIComponent(url)); tries.push(url);
-    let last;
-    for(const u of tries){
-      const ac=new AbortController(), to=setTimeout(()=>ac.abort(), 95000);
-      try{ const r=await fetch(u,{signal:ac.signal});
-        if(!r.ok){ let m='HTTP '+r.status; try{ const t=(await r.text()).trim(); if(t && t.length<240) m=t; }catch(_){} throw new Error(m); }
-        const out = as==='json' ? await r.json() : as==='text' ? await r.text() : await r.arrayBuffer(); clearTimeout(to); return out; }
-      catch(e){ clearTimeout(to); if(e.name==='AbortError') e=new Error('timeout'); if(!last || u.startsWith('proxy')) last=e; }
-    }
-    throw last;
+    const endpoint=await this.detect() ? 'proxy?url='+encodeURIComponent(url) : url;
+    const controller=new AbortController();
+    const catalog=(as==='json' && !url.includes('action=parse')) || url.includes('/search.opds/');
+    const timer=setTimeout(()=>controller.abort(), catalog ? 15000 : 95000);
+    try{
+      const response=await fetch(endpoint,{signal:controller.signal});
+      if(!response.ok){
+        const message=(await response.text()).trim();
+        throw new Error(message && message.length<240 ? message : 'HTTP '+response.status);
+      }
+      if(as==='json') return await response.json();
+      if(as==='text') return await response.text();
+      return await response.arrayBuffer();
+    }catch(e){ if(e.name==='AbortError') throw new Error('timeout'); throw e; }
+    finally{ clearTimeout(timer); }
   }
 };
 NET.detect();   // learn early whether server.py is there (proxy, covers)
+/* Genres: what each one asks the live sources for (Gutendex topic / Google subject / Open Library subject / Vikikaynak word) */
+const GENRES = [
+  {id:'classic',  en:'Classics',        tr:'Klasik',       q:'fiction',          ws:'roman'},
+  {id:'romance',  en:'Romance',         tr:'Aşk',          q:'love stories',     ws:'aşk'},
+  {id:'mystery',  en:'Mystery',         tr:'Polisiye',     q:'detective',        ws:'polisiye'},
+  {id:'adventure',en:'Adventure',       tr:'Macera',       q:'adventure',        ws:'macera'},
+  {id:'horror',   en:'Horror',          tr:'Korku',        q:'horror',           ws:'korku'},
+  {id:'scifi',    en:'Science fiction', tr:'Bilimkurgu',   q:'science fiction',  ws:'bilim'},
+  {id:'fantasy',  en:'Fantasy',         tr:'Fantastik',    q:'fantasy',          ws:'masal'},
+  {id:'poetry',   en:'Poetry',          tr:'Şiir',         q:'poetry',           ws:'şiir'},
+  {id:'drama',    en:'Plays',           tr:'Tiyatro',      q:'drama',            ws:'tiyatro'},
+  {id:'philosophy',en:'Philosophy',     tr:'Felsefe',      q:'philosophy',       ws:'felsefe'},
+  {id:'history',  en:'History',         tr:'Tarih',        q:'history',          ws:'tarih'},
+  {id:'children', en:'Children',        tr:'Çocuk',        q:'children',         ws:'çocuk'},
+];
+/* Book languages: Open Library uses 3-letter codes */
+const LANGS = [
+  {id:'all',en:'All',tr:'Tümü'}, {id:'en',en:'English',tr:'İngilizce',ol:'eng'}, {id:'tr',en:'Turkish',tr:'Türkçe',ol:'tur'},
+  {id:'fr',en:'French',tr:'Fransızca',ol:'fre'}, {id:'de',en:'German',tr:'Almanca',ol:'ger'},
+  {id:'es',en:'Spanish',tr:'İspanyolca',ol:'spa'}, {id:'it',en:'Italian',tr:'İtalyanca',ol:'ita'},
+];
+const LOCAL_LANGS = ['all','en','tr'];                 // the built-in shelf has English and Turkish books
+const olLangParam = () => { const l=LANGS.find(x=>x.id===state.langF); return l&&l.ol ? '&language='+l.ol : ''; };
+const lang2 = c => (c||'en').slice(0,2).toLowerCase();
+const topicWord = () => { const g=GENRES.find(x=>x.id===state.genres[0]); return g ? g.q : MOOD_TOPIC[state.moods[0]]; };
 const MOOD_TOPIC = {calm:'nature',curious:'science',heartbroken:'love',adventurous:'adventure',nostalgic:'childhood',dark:'horror'};
 const DS = { src:'gb', q:'', busy:false, results:[], loadedOnce:false };
 const dsCache = new Map();
-async function cached(key, fn){ if(dsCache.has(key)) return dsCache.get(key); const v=await fn(); dsCache.set(key,v); return v; }
+async function cached(key, fn){
+  if(dsCache.has(key)) return dsCache.get(key);
+  const request=fn();
+  dsCache.set(key,request);
+  try{ return await request; }
+  catch(e){ if(dsCache.get(key)===request) dsCache.delete(key); throw e; }
+}
 const olCover = id => id ? `https://covers.openlibrary.org/b/id/${id}-M.jpg` : null;
-const langWanted = () => state.langF==='tr' ? 'tr' : state.langF==='en' ? 'en' : 'en,tr';
+const langWanted = () => state.langF==='all' ? 'en,tr' : state.langF;
 
 /* --- sources --- */
 const GB='https://www.gutenberg.org', GB_FILES='https://aleph.pglaf.org';   // covers come from Gutenberg's own file mirror (www is often busy)
@@ -4115,44 +4328,43 @@ function parseOPDS(xml){
     const title=one('title'); if(!id || seen.has(id) || !title || /^(sort|sorted)\b/i.test(title)) continue; seen.add(id);
     const an=e.getElementsByTagName('author')[0], author = an ? (an.getElementsByTagName('name')[0]||an).textContent.trim() : one('content').split(/[\n;]/)[0];
     const lg = one('dcterms:language') || one('dc:language') || one('language');
-    out.push(gbItem(id, title.replace(/\s*[:;]\s*$/,''), author.slice(0,80), lg ? (lg.startsWith('tr')?'tr':'en') : (state.langF==='tr'?'tr':'en')));
+    out.push(gbItem(id, title.replace(/\s*[:;]\s*$/,''), author.slice(0,80), lg ? lang2(lg) : (state.langF==='all'?'en':state.langF)));
     if(out.length>=24) break;
   }
   return out;
 }
 async function searchGutenberg(q){
-  const lf = state.langF==='tr' ? 'l.tr' : state.langF==='en' ? 'l.en' : '';
+  const lf = state.langF==='all' ? '' : 'l.'+state.langF;
   const get = qq => cached('gs:'+qq, ()=>NET.get(`${GB}/ebooks/search.opds/?query=${encodeURIComponent(qq)}`,'text')).then(parseOPDS);
   let items = await get([q,lf].filter(Boolean).join(' '));
   if(!items.length && lf && q) items = await get(q);                 // language prefix too strict -> try the plain words
   return items;
 }
-async function searchFree(q){
-  DS.fallback=false;
-  if(!q && state.langF!=='tr') return moodPicks();                    // instant: hand-picked classics for the mood, no waiting
+async function searchFree(q, status){
+  if(!q && !state.genres.length && (state.langF==='all'||state.langF==='en')) return moodPicks();                    // instant: hand-picked classics for the mood, no waiting
   if(!GB_SEARCH.down){
     try{ return await searchGutenberg(q); }
-    catch(e){ console.warn('Gutenberg search failed', e); DS.err=String(e.message||e); GB_SEARCH.down=true; }
+    catch(e){ console.warn('Gutenberg search failed', e); GB_SEARCH.pause(); }
   }
-  DS.fallback=true;
+  status.fallback=true;
   try{ const r=await searchGutendex(q); if(r.length) return r; } catch(e){ console.warn('Gutendex failed', e); }
   try{ const r=(await searchGoogleBooks(q,true)).filter(b=>b.free); if(r.length) return r; } catch(e){ console.warn('Google Books failed', e); }
   return await searchOpenLibraryFree(q);
 }
 async function searchGutendex(q){
-  const params = q ? `search=${encodeURIComponent(q)}` : `topic=${encodeURIComponent(MOOD_TOPIC[state.moods[0]]||'fiction')}`;
+  const params = q ? `search=${encodeURIComponent(q)}` : `topic=${encodeURIComponent(topicWord()||'fiction')}`;
   const d = await cached('g:'+params+langWanted(), ()=>NET.get(`https://gutendex.com/books/?${params}&languages=${langWanted()}`));
-  return (d.results||[]).filter(b=>b.copyright!==true).slice(0,24).map(b=>({
+  return (d.results||[]).filter(b=>b.copyright!==true && b.title).slice(0,24).map(b=>({
     src:'gutenberg', id:'g'+b.id, title:b.title.replace(/\s*[:;]\s*$/,''), author:(b.authors[0]&&b.authors[0].name||'').replace(/^([^,]+),\s*(.+)$/,'$2 $1'),
-    year:b.authors[0]&&b.authors[0].birth_year?`${b.authors[0].birth_year}–${b.authors[0].death_year||''}`:'', lang:(b.languages||[])[0]==='tr'?'tr':'en',
+    year:b.authors[0]&&b.authors[0].birth_year?`${b.authors[0].birth_year}–${b.authors[0].death_year||''}`:'', lang:lang2((b.languages||[])[0]),
     cover:gbFiles(b.formats['image/jpeg'])||null, free:true, gid:b.id, formats:b.formats, subjects:(b.subjects||[]).slice(0,3), summary:(b.summaries||[])[0]||''
   }));
 }
 async function searchOpenLibrary(q){
   const fields='key,title,author_name,first_publish_year,cover_i,language,ebook_access,public_scan_b,ia,number_of_pages_median,subject';
-  const lang = state.langF==='tr' ? '&language=tur' : state.langF==='en' ? '&language=eng' : '';
+  const lang = olLangParam();
   const url = q ? `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&fields=${fields}&limit=24${lang}`
-                : `https://openlibrary.org/search.json?subject=${encodeURIComponent(MOOD_TOPIC[state.moods[0]]||'fiction')}&fields=${fields}&limit=24&sort=rating${lang}`;
+                : `https://openlibrary.org/search.json?subject=${encodeURIComponent(topicWord()||'fiction')}&fields=${fields}&limit=24&sort=rating${lang}`;
   const d = await cached('o:'+url, ()=>NET.get(url));
   const rank=x=> x.free?0 : x.access==='borrowable'?1 : x.access==='printdisabled'?2 : 3;
   return (d.docs||[]).map(b=>({
@@ -4163,8 +4375,8 @@ async function searchOpenLibrary(q){
 }
 async function searchOpenLibraryFree(q){
   const fields='key,title,author_name,first_publish_year,cover_i,language,ebook_access,public_scan_b,ia,number_of_pages_median,subject';
-  const base = q ? q : `subject:${MOOD_TOPIC[state.moods[0]]||'fiction'}`;
-  const lang = state.langF==='tr' ? '&language=tur' : state.langF==='en' ? '&language=eng' : '';
+  const base = q ? q : `subject:${topicWord()||'fiction'}`;
+  const lang = olLangParam();
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(base+' ebook_access:public')}&fields=${fields}&limit=24${lang}`;
   const d = await cached('of:'+url, ()=>NET.get(url));
   return (d.docs||[]).filter(b=>b.ebook_access==='public' && (b.ia||[]).length).map(b=>({
@@ -4174,16 +4386,16 @@ async function searchOpenLibraryFree(q){
 }
 /* Google Books: the widest catalogue. The API key (if any) is added by server.py, never sent to the browser. */
 async function searchGoogleBooks(q, freeOnly){
-  const base = q ? q : `subject:${MOOD_TOPIC[state.moods[0]]||'fiction'}`;
-  const lang = state.langF==='tr' ? '&langRestrict=tr' : state.langF==='en' ? '&langRestrict=en' : '';
+  const base = q ? q : `subject:${topicWord()||'fiction'}`;
+  const lang = state.langF==='all' ? '' : '&langRestrict='+state.langF;
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(base)}&maxResults=24&printType=books${freeOnly?'&filter=free-ebooks':''}${lang}`;
   const d = await cached('gb:'+url, ()=>NET.get(url));
   const seen=new Set();
   return (d.items||[]).map(v=>{
     const i=v.volumeInfo||{}, a=v.accessInfo||{}, img=i.imageLinks||{};
     const free = !!a.publicDomain || (v.saleInfo||{}).saleability==='FREE';
-    return { src:'googlebooks', id:'b'+v.id, gbId:v.id, title:(i.title||'')+(i.subtitle&&i.title.length<30?': '+i.subtitle:''), author:(i.authors||[])[0]||'',
-      year:(i.publishedDate||'').slice(0,4), lang:(i.language||'en').startsWith('tr')?'tr':'en',
+    return { src:'googlebooks', id:'b'+v.id, gbId:v.id, title:(i.title||'')+(i.subtitle && i.title && i.title.length<30?': '+i.subtitle:''), author:(i.authors||[])[0]||'',
+      year:(i.publishedDate||'').slice(0,4), lang:lang2(i.language),
       cover:(img.thumbnail||img.smallThumbnail||'').replace(/^http:/,'https:').replace('&edge=curl','')||null,
       free, preview:a.viewability==='PARTIAL'||a.viewability==='ALL_PAGES', link:i.previewLink||i.infoLink||`https://books.google.com/books?id=${v.id}`,
       summary:(i.description||'').replace(/<[^>]+>/g,''), pages:i.pageCount||0, subjects:(i.categories||[]).slice(0,3) };
@@ -4230,11 +4442,11 @@ async function fetchGutenberg(item){
   if(!txt) throw new Error('notext');
   return txtToBook(await NET.get(f[txt],'text'));
 }
-const normT = t => (t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/^(the|a|an)\s+/,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const normT = t => (t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/^(the|a|an)\s+/,'').replace(/[^\p{L}\p{M}\p{N} ]/gu,' ').replace(/\s+/g,' ').trim();
 async function gutenbergFor(title, author){
   const t=title.split(/[:;(]/)[0].trim(), last=(author||'').split(' ').pop();
   let res=[];
-  if(!GB_SEARCH.down){ try{ res=await cached('gs:'+t+' '+last, ()=>NET.get(`${GB}/ebooks/search.opds/?query=${encodeURIComponent(t+' '+last)}`,'text')).then(parseOPDS); }catch(e){ GB_SEARCH.down=true; } }
+  if(!GB_SEARCH.down){ try{ res=await cached('gs:'+t+' '+last, ()=>NET.get(`${GB}/ebooks/search.opds/?query=${encodeURIComponent(t+' '+last)}`,'text')).then(parseOPDS); }catch(e){ GB_SEARCH.pause(); } }
   if(GB_SEARCH.down){ const d=await cached('gd:'+t+' '+last, ()=>NET.get(`https://gutendex.com/books/?search=${encodeURIComponent(t+' '+last)}`));
     res=(d.results||[]).filter(b=>b.copyright!==true).map(b=>gbItem(b.id, b.title, (b.authors[0]&&b.authors[0].name)||'', ((b.languages||[])[0]==='tr')?'tr':'en')); }
   const want=normT(t);
@@ -4351,9 +4563,20 @@ async function runDiscover(){
   DS.busy=true; DS.loading=true; DS.results=[]; renderDiscover();            // old books disappear at once
   st.textContent=tr('Searching…'); st.className='ds-status';
   try{
-    DS.fallback=false; const res = src==='gb' ? await searchGoogleBooks(DS.q).catch(e=>{ console.warn('Google Books failed', e); return searchFree(DS.q).then(r=>{ DS.fallback=true; return r; }); }) : src==='free' ? await searchFree(DS.q) : src==='ol' ? await searchOpenLibrary(DS.q) : await searchWikisource(DS.q);
+    const status={fallback:false}, query=DS.q;
+    let res;
+    if(src==='gb'){
+      try{ res=await searchGoogleBooks(query); }
+      catch(e){
+        if(run!==DS.run) return;
+        console.warn('Google Books failed',e);
+        status.fallback=true; res=await searchFree(query,status);
+      }
+    }else if(src==='free') res=await searchFree(query,status);
+    else if(src==='ol') res=await searchOpenLibrary(query);
+    else res=await searchWikisource(query);
     if(run!==DS.run) return;                                                  // the reader switched tabs meanwhile
-    DS.loading=false; DS.results=res;
+    DS.loading=false; DS.results=res; DS.fallback=status.fallback;
     DS.st = DS.results.length ? 'ok' : 'none'; dsStatus();
     renderDiscover();
     if(src==='gb') checkGoogleReadable(DS.results).then(()=>{ if(run===DS.run) renderDiscover(); });
@@ -4492,14 +4715,10 @@ function googleCloud(){
   if(!id){ const h=$('#gHelp'); h.hidden=false; h.innerHTML = LANG==='tr'
       ? 'Google ile giriş için bir kerelik kurulum gerekiyor: Google Cloud’dan ücretsiz bir <b>OAuth Client ID</b> al ve proje klasöründeki <code>google_client_id.txt</code> dosyasına yapıştır, sonra <code>server.py</code>’yi yeniden başlat. Adımlar README’de.'
       : 'Google sign-in needs a one-time setup: create a free <b>OAuth Client ID</b> in Google Cloud, paste it into <code>google_client_id.txt</code> in the project folder and restart <code>server.py</code>. Steps are in the README.'; return; }
-  gsiP = gsiP || new Promise((ok,no)=>{ const s=document.createElement('script'); s.src='https://accounts.google.com/gsi/client'; s.onload=ok; s.onerror=no; document.head.appendChild(s); });
-  gsiP.then(()=>{
-    google.accounts.id.initialize({client_id:id, callback:async r=>{
-      try{ const d=await CLOUD.api('google','POST',{credential:r.credential}); signIn(d.user,'Connecting your Google account…',{created:d.created}); }
-      catch(e){ toast(tr(e.message)); }
-    }});
+  loadGsi().then(()=>{
+    google.accounts.id.initialize({client_id:id, callback:onGoogleCred});
     google.accounts.id.prompt();
-  }).catch(()=>toast(tr('Google sign-in isn’t set up on this server.')));
+  }).catch(()=>toast(LANG==='tr'?'Google ile giriş yüklenemedi. Tekrar dene veya e-postanla giriş yap.':'Google sign-in couldn’t load. Try again or sign in with email.'));
 }
 async function openSharedBook(id){
   const have=byId(id); if(have){ openDetail(id); return; }
@@ -4730,7 +4949,23 @@ const GW = (()=>{
 })();
 
 /* ================= INIT ================= */
-applyTheme(); loadData(); renderChips(); renderSeg(); renderShelf(); renderLib(); renderUser(); update(true); renderHabit(false);
+/* ---- install as an app (PWA): Android shows a real prompt, iPhone needs Share → Add to Home Screen ---- */
+(function(){
+  if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1'))
+    addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('service worker', e)));
+  const btn=document.getElementById('installApp'); if(!btn) return;
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  let deferred=null;
+  addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferred=e; if(!standalone) btn.hidden=false; });
+  if(ios && !standalone) btn.hidden=false;
+  btn.addEventListener('click', async ()=>{
+    if(deferred){ deferred.prompt(); await deferred.userChoice.catch(()=>{}); deferred=null; btn.hidden=true; return; }
+    toast(LANG==='tr' ? 'Safari’de Paylaş ⎋ düğmesine bas, sonra “Ana Ekrana Ekle”yi seç.' : 'In Safari, tap Share ⎋, then “Add to Home Screen”.');
+  });
+  addEventListener('appinstalled', ()=>{ btn.hidden=true; });
+})();
+applyTheme(); loadData(); renderChips(); renderGenres(); renderLangF(); renderSeg(); renderShelf(); renderLib(); renderUser(); update(true); renderHabit(false);
 root.classList.toggle('reduced', state.reduced);
 $('#motionTxt').textContent=state.reduced?'Off':'On'; $('#motionBtn').setAttribute('aria-pressed', state.reduced);
 applyLang(); loadCustomBooks().then(()=>{ update(true); refreshAll(); }); setSmooth(!state.reduced); buildScroll(); updateStory(); onScroll();

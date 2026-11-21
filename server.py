@@ -18,8 +18,9 @@ Real Google sign-in (optional): GOOGLE_CLIENT_ID=<your OAuth client id>  python 
 Needs only the Python standard library (Python 3.8+).
 """
 import http.server, socketserver, urllib.request, urllib.parse, urllib.error, ssl, os, sys, time, socket
-import json, sqlite3, hashlib, hmac, secrets, re, threading
+import json, sqlite3, hashlib, hmac, secrets, re, threading, tempfile
 from http.cookies import SimpleCookie
+from concurrent.futures import Future
 
 PORT = int(os.environ.get("PORT", "8000"))
 HOST = os.environ.get("HOST", "127.0.0.1")
@@ -68,6 +69,11 @@ GB_MIRRORS = ("https://aleph.pglaf.org", "https://gutenberg.pglaf.org", "http://
 _gb_down = [0.0]   # time www.gutenberg.org last failed; for 10 min we go straight to the mirrors
 MAX_BYTES = 40 * 1024 * 1024
 TIMEOUT = 45
+CATALOG_TIMEOUT = 6  # interactive searches can switch to another catalogue
+CATALOG_COOLDOWN = 60
+_catalog_retry_at = {}
+_catalog_lock = threading.Lock()
+_catalog_pending = {}  # share identical in-flight queries between UI sections
 SESSION_DAYS = 30
 COOKIE = "chapter_sid"
 _last = {}   # tiny politeness limiter (Open Library: ~1 request/second without a key)
@@ -158,12 +164,12 @@ def with_books_key(url):
         return url + ("&" if u.query else "?") + "key=" + urllib.parse.quote(GOOGLE_BOOKS_KEY)
     return url
 
-def explain(e):
+def explain(e, timeout):
     s = str(e)
     if isinstance(e, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in s:
         return "SSL certificate problem - run:  pip install certifi   then restart server.py"
     if isinstance(e, (socket.timeout, TimeoutError)) or "timed out" in s:
-        return f"the source did not answer within {TIMEOUT}s (it may be busy - try again)"
+        return f"the source did not answer within {timeout}s (it may be busy - try again)"
     if "getaddrinfo" in s or "Name or service not known" in s or "nodename" in s:
         return "no internet / DNS problem on this computer"
     return s[:200]
@@ -186,20 +192,55 @@ def gb_mirror_paths(url):
 
 def fetch(url, cache=True):
     host = urllib.parse.urlparse(url).hostname or ""
+    if cache and api_cacheable(url):                 # catalogue answers: kept on disk for 12 h, so the app opens fast
+        hit = api_cache_get(url)
+        if hit: return 200, hit[1], hit[0]
+        with _catalog_lock:
+            pending = _catalog_pending.get(url)
+            if pending is None:
+                future = _catalog_pending[url] = Future()
+        if pending is not None:
+            return pending.result()
+        try:
+            code, body, ctype = _fetch_api(url, host)
+            if code == 200: api_cache_put(url, ctype, body)
+            future.set_result((code, body, ctype))
+            return future.result()
+        except Exception as error:
+            future.set_exception(error)
+            raise
+        finally:
+            with _catalog_lock:
+                del _catalog_pending[url]
+    return _fetch_api(url, host, cache)
+
+def _fetch_api(url, host, cache=True):
+    # Wikisource also uses its API to download the text of entire chapters.
+    if host.endswith("wikisource.org") and urllib.parse.parse_qs(urllib.parse.urlsplit(url).query).get("action") == ["parse"]:
+        return fetch_one(url, cache)
+    if api_cacheable(url):
+        # Cache hits have already been served by fetch(). A catalog outage shouldn't
+        # hold up each new mood, search or language choice for two download timeouts.
+        with _catalog_lock:
+            if time.monotonic() < _catalog_retry_at.get(host, 0):
+                return 503, f"{host} temporarily unavailable; try another catalogue".encode(), "text/plain"
+        code, body, ctype = fetch_one(with_books_key(url), cache, retries=1, timeout=CATALOG_TIMEOUT)
+        if code >= 500 or code == 429:
+            with _catalog_lock:
+                _catalog_retry_at[host] = time.monotonic() + CATALOG_COOLDOWN
+        if host == "www.googleapis.com" and GOOGLE_BOOKS_KEY:
+            body = body.replace(GOOGLE_BOOKS_KEY.encode(), b"<key>")
+        return code, body, ctype
     if host == "www.googleapis.com":
         code, body, ctype = fetch_one(with_books_key(url), cache)
-        if GOOGLE_BOOKS_KEY:   # never echo the key back in an error message
+        if GOOGLE_BOOKS_KEY:
             body = body.replace(GOOGLE_BOOKS_KEY.encode(), b"<key>")
         return code, body, ctype
     if not host.endswith("gutenberg.org"):
         return fetch_one(url, cache)
     path = gb_mirror_paths(url)
-    if not path:                                   # a search page: no mirror has it
-        if time.time() - _gb_down[0] < 300:        # known busy -> answer at once, the app uses Gutendex
-            return 503, b"www.gutenberg.org answered HTTP 503 (busy, using Gutendex)", "text/plain"
-        code, body, ctype = fetch_one(url, cache, retries=1)
-        if code >= 500 or code in (403, 429): _gb_down[0] = time.time()
-        return code, body, ctype
+    if not path:
+        return fetch_one(url, cache, retries=1)
     disk = book_cache_get(path) if cache else None  # downloaded before -> instant, even after a restart
     if disk: return 200, disk[1], disk[0]
     sources = ([] if time.time() - _gb_down[0] < 600 else [url]) + [m + path for m in GB_MIRRORS]
@@ -207,6 +248,41 @@ def fetch(url, cache=True):
     if winner != url and url in sources: _gb_down[0] = time.time()
     if code == 200 and cache: book_cache_put(path, ctype, body)
     return code, body, ctype
+
+API_TTL = 12 * 3600
+def api_cacheable(url):
+    u = urllib.parse.urlparse(url); h = (u.hostname or "").lower(); p = u.path
+    return (h == "gutendex.com" or (h == "www.googleapis.com" and p.startswith("/books/v1/volumes"))
+            or (h == "openlibrary.org" and p == "/search.json") or (h.endswith("wikisource.org") and p.endswith("/api.php"))
+            or (h.endswith("gutenberg.org") and "search.opds" in p))
+def _api_name(url):
+    return os.path.join(BOOK_CACHE, "api", hashlib.sha1(url.encode("utf-8")).hexdigest())
+def api_cache_get(url):
+    f = _api_name(url)
+    try:
+        if time.time() - os.path.getmtime(f) > API_TTL: return None
+        with open(f, "rb") as fh:
+            ctype, _, body = fh.read().partition(b"\n")
+        return ctype.decode("ascii", "replace"), body
+    except OSError:
+        return None
+def api_cache_put(url, ctype, body):
+    try:
+        os.makedirs(os.path.join(BOOK_CACHE, "api"), exist_ok=True)
+        write_cache_file(_api_name(url), (ctype or "application/json").encode("ascii", "replace") + b"\n" + body)
+    except OSError:
+        pass
+
+def write_cache_file(path, data):
+    # Concurrent requests for the same title must never share a partially written file.
+    tmp = tempfile.NamedTemporaryFile(dir=os.path.dirname(path), suffix=".part", delete=False)
+    try:
+        with tmp:
+            tmp.write(data)
+        os.replace(tmp.name, path)
+    finally:
+        if os.path.exists(tmp.name):
+            os.unlink(tmp.name)
 
 def race(urls):
     """Ask every source at once and keep the first good answer (mirror speed varies a lot by country)."""
@@ -224,7 +300,9 @@ def race(urls):
                     return code, body, ctype, u
                 first = first or (code, body, ctype)
     finally:
-        pool.shutdown(wait=False, cancel_futures=True)
+        for f in futs:
+            f.cancel()
+        pool.shutdown(wait=False)
     return first + (None,)
 
 BOOK_CACHE = os.path.join(HERE, "book-cache")   # Gutenberg files kept on disk (never served directly)
@@ -242,18 +320,15 @@ def book_cache_put(path, ctype, body):
     if not path.endswith((".epub", ".txt", ".jpg")): return   # books and covers
     try:
         os.makedirs(BOOK_CACHE, exist_ok=True)
-        files = sorted((os.path.getmtime(os.path.join(BOOK_CACHE, n)), n) for n in os.listdir(BOOK_CACHE))
+        files = sorted((os.path.getmtime(os.path.join(BOOK_CACHE, n)), n) for n in os.listdir(BOOK_CACHE) if not n.endswith(".part") and os.path.isfile(os.path.join(BOOK_CACHE, n)))
         total = sum(os.path.getsize(os.path.join(BOOK_CACHE, n)) for _, n in files)
         while files and total > 300 * 1024 * 1024:                  # keep the folder under ~300 MB
             _, n = files.pop(0); total -= os.path.getsize(os.path.join(BOOK_CACHE, n)); os.remove(os.path.join(BOOK_CACHE, n))
-        tmp = _bc_name(path) + ".part"
-        with open(tmp, "wb") as f:
-            f.write(body)
-        os.replace(tmp, _bc_name(path))
+        write_cache_file(_bc_name(path), body)
     except OSError:
         pass
 
-def fetch_one(url, cache=True, retries=2):
+def fetch_one(url, cache=True, retries=2, timeout=TIMEOUT):
     host = urllib.parse.urlparse(url).hostname or ""
     hit = _cache.get(url)
     if cache and hit and time.time() - hit[0] < CACHE_TTL:
@@ -265,7 +340,7 @@ def fetch_one(url, cache=True, retries=2):
         _last[host] = time.time()
         req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
         try:
-            with urllib.request.urlopen(req, timeout=TIMEOUT, context=SSL_CTX) as r:
+            with urllib.request.urlopen(req, timeout=timeout, context=SSL_CTX) as r:
                 if not allowed(r.geturl()) and not r.geturl().startswith("https://oauth2.googleapis.com/"):
                     return 403, b"redirect not allowed", "text/plain"
                 body = r.read(MAX_BYTES + 1)
@@ -284,7 +359,7 @@ def fetch_one(url, cache=True, retries=2):
         except Exception as e:
             if attempt < retries and ("timed out" in str(e) or isinstance(e, (socket.timeout, TimeoutError))):
                 continue
-            return 502, f"{host}: {explain(e)}".encode(), "text/plain"
+            return 502, f"{host}: {explain(e, timeout)}".encode(), "text/plain"
     return 502, f"{host}: no answer".encode(), "text/plain"
 
 # ---------------------------------------------------------------- HTTP
@@ -293,12 +368,27 @@ class ApiError(Exception):
         super().__init__(msg); self.code, self.msg, self.field = code, msg, field
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    extensions_map = {**http.server.SimpleHTTPRequestHandler.extensions_map,
+                      ".webmanifest": "application/manifest+json", ".js": "text/javascript"}
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=HERE, **kw)
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
         super().end_headers()
+
+    def send_head(self):
+        # Validate the resolved filename for both GET and HEAD. The working folder
+        # also contains credentials, account data, source files and private caches.
+        path = os.path.realpath(self.translate_path(self.path))
+        root = os.path.realpath(HERE)
+        relative = os.path.relpath(path, root).replace(os.sep, "/")
+        shell = relative in (".", "index.html", "sw.js", "manifest.webmanifest")
+        asset = (relative.startswith(("icons/", "ornek-kitaplar/")) and os.path.isfile(path))
+        if shell or asset:
+            return super().send_head()
+        self.send_error(404, "File not found")
+        return None
 
     # ---- routing
     def do_GET(self):
@@ -307,9 +397,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if p.startswith("/proxy?"):      return self._proxy()
         if p.startswith("/api/"):        return self._api("GET")
         if p.startswith("/favicon.ico"): self.send_response(204); self.end_headers(); return
-        if p.startswith("/book-cache"): return self._send(404, b"not found", "text/plain")
-        if p.split("?")[0].endswith((".db", ".db-journal", ".py", ".txt")) and "ornek-kitaplar" not in p:   # never serve the database or code
-            return self._send(404, b"not found", "text/plain")
         return super().do_GET()
     def do_POST(self):   return self._api("POST") if self.path.startswith("/api/") else self._send(404, b"", "text/plain")
     def do_PUT(self):    return self._api("PUT") if self.path.startswith("/api/") else self._send(404, b"", "text/plain")
@@ -575,7 +662,7 @@ def check():
     print("Checking the book sources from this computer...\n")
     ok_all = True
     for name, url in tests:
-        t = time.time(); code, body, _ = (fetch_one if "mirror" in name or "search" in name else fetch)(url, cache=False)
+        t = time.time(); code, body, _ = fetch(url, cache=False)
         if code == 200:
             print(f"  OK    {name:18} {time.time()-t:4.1f}s")
         elif name == "Gutenberg search":

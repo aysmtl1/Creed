@@ -130,3 +130,24 @@ Open Library, API kullanan uygulamaların kendini tanıtmasını istiyor. `serve
 ## Klavye kısayolları
 
 `B` kütüphane · `M` animasyon · `T` tema · `← →` okuyucuda sayfa · `Esc` kapat (ekranda gösterilmez, sadece kısayol)
+
+
+## Telefona uygulama olarak kurmak (PWA)
+
+CHAPTER / bir **PWA** (Progressive Web App): ayrı bir mobil uygulama yazmadan telefonda uygulama gibi açılır. Ana ekranda kendi simgesi olur, adres çubuğu olmadan tam ekran açılır ve son açılan sayfa internetsiz de görünür.
+
+- **Android (Chrome):** siteyi aç → menü ⋮ → **Uygulamayı yükle** (ya da sitenin altındaki **Install the app** düğmesi).
+- **iPhone (Safari):** siteyi aç → **Paylaş** → **Ana Ekrana Ekle**.
+
+Önemli: telefonlar tam kurulum için **HTTPS** ister. Aynı Wi-Fi'de `http://192.168.x.x:8000` ile açınca iPhone yine ana ekrana ekler, Android ise kısayol oluşturur; çevrimdışı açılış ve "Uygulamayı yükle" penceresi için siteyi HTTPS ile yayınlayın (ör. Render, Railway, PythonAnywhere ya da test için `cloudflared tunnel --url http://localhost:8000`). Bilgisayarda `http://localhost:8000` zaten güvenli sayılır, orada her şey çalışır.
+
+Dosyalar: `manifest.webmanifest` (ad, renkler, simgeler), `sw.js` (çevrimdışı kabuk), `icons/`.
+
+
+## Hız ve tutarlılık (son güncelleme)
+
+- **Your picks parça parça gelir:** her kaynak cevap verdiği anda kitapları eklenir; yavaş bir kaynak diğerlerini bekletmez (en fazla 9 sn).
+- **Hatırlanan seçimler:** aynı ruh hali / tür / dil için son seçimler 30 dakika saklanır; uygulama yeniden açılınca anında görünür.
+- **Sunucu önbelleği:** katalog cevapları (Gutendex, Google Books, Open Library, Vikikaynak) `book-cache/api/` klasöründe 12 saat tutulur.
+- **Tek sayı:** "books match" sayısı, Your picks'te gördüğün kitap sayısının aynısıdır (koleksiyondaki eşleşmeler + canlı seçimler).
+- **Büyüyen raf:** tek rafa sığmayan kütüphane "Okunuyor / Okumak istiyorum / Bitti" etiketli raflara bölünür; telefonda 2, bilgisayarda 3 raf görünür, gerisi "Tüm rafları göster" ile açılır.
